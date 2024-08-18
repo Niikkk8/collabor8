@@ -8,7 +8,7 @@ export default function SidebarProfileInfo() {
                 <img src={'/assets/placeholder-images/profile-picture.jpg'} alt='' className='object-cover w-[56px] h-[56px] rounded-full' />
                 <div className='ml-4'>
                     <h2 className='font-medium leading-5'>Niket Shah</h2>
-                    <p className='text-white-800 text-sm'>@nik8</p>
+                    <p className='text-white-800 text-xs'>@nik8</p>
                 </div>
             </div>
             <div className='flex justify-between'>

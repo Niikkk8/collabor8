@@ -1,3 +1,9 @@
+@import url('./fonts.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.impact-font{
+    font-family: 'Impact', sans-serif;
+}
