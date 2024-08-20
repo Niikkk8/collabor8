@@ -1,11 +1,17 @@
-import React from 'react'
-// import Image from 'next/image'
+import React from 'react';
+import Image from 'next/image';
 
 export default function SidebarProfileInfo() {
     return (
         <div className='bg-dark-800 p-4 mt-2 rounded-lg'>
             <div className='flex items-center'>
-                <img src={'/assets/placeholder-images/profile-picture.jpg'} alt='' className='object-cover w-[56px] h-[56px] rounded-full' />
+                <Image 
+                    src={'/assets/placeholder-images/profile-picture.jpg'} 
+                    alt='' 
+                    width={56} 
+                    height={56} 
+                    className='object-cover rounded-full' 
+                />
                 <div className='ml-4'>
                     <h2 className='font-medium leading-5'>Niket Shah</h2>
                     <p className='text-white-800 text-xs'>@nik8</p>

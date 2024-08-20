@@ -1,8 +1,8 @@
-import React from 'react'
-import SidebarProfileInfo from '../sidebar/SidebarProfileInfo'
-import Link from 'next/link'
-import Image from 'next/image'
-import SidebarCommunitiesList from '../sidebar/SidebarCommunitiesList'
+import React from 'react';
+import SidebarProfileInfo from '../sidebar/SidebarProfileInfo';
+import Link from 'next/link';
+import Image from 'next/image';
+import SidebarCommunitiesList from '../sidebar/SidebarCommunitiesList';
 
 export default function Sidebar() {
   return (
@@ -45,5 +45,5 @@ export default function Sidebar() {
         <p className='text-xs text-white-900'>@2024 Collabor8 All Rights Reserved</p>
       </div>
     </div>
-  )
+  );
 }

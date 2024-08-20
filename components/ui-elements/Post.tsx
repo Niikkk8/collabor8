@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export default function Post({ post }: { post: any }) {
   const { profileName, profileSrc, userId, followers, time, content, likes, comments } = post;
@@ -7,7 +8,13 @@ export default function Post({ post }: { post: any }) {
     <div className='p-4 border border-dark-600 rounded post-gradient'>
       <div className='flex justify-between'>
         <div className='flex'>
-          <img src={profileSrc} alt="" className='w-[48px] h-[48px] object-cover rounded-full' />
+          <Image
+            src={profileSrc}
+            alt=""
+            width={48}
+            height={48}
+            className='object-cover rounded-full'
+          />
           <div className='ml-3'>
             <div className='flex items-center space-x-2'>
               <h3 className='font-medium'>{profileName}</h3>
@@ -18,24 +25,49 @@ export default function Post({ post }: { post: any }) {
             <div className='text-white-800 text-sm'>{time}</div>
           </div>
         </div>
-        <img src="/assets/svgs/post-verticalellipsis.svg" alt="" className='w-[32px] h-[32px]' />
+        <Image
+          src="/assets/svgs/post-verticalellipsis.svg"
+          alt=""
+          width={32}
+          height={32}
+        />
       </div>
       <p className='py-4 pl-2 border-b border-dark-400 text-sm'>{content}</p>
       <div className='flex mt-2'>
         <div className='mr-3 flex items-center space-x-1'>
-          <img src="/assets/svgs/post-like.svg" className='w-[18px] h-[18px]' alt="" />
+          <Image
+            src="/assets/svgs/post-like.svg"
+            alt=""
+            width={18}
+            height={18}
+          />
           <p>Like</p>
         </div>
         <div className='mr-3 flex items-center space-x-1'>
-          <img src="/assets/svgs/post-comment.svg" className='w-[18px] h-[18px]' alt="" />
+          <Image
+            src="/assets/svgs/post-comment.svg"
+            alt=""
+            width={18}
+            height={18}
+          />
           <p>Comment</p>
         </div>
         <div className='mr-3 flex items-center space-x-1'>
-          <img src="/assets/svgs/post-repost.svg" className='w-[18px] h-[18px]' alt="" />
+          <Image
+            src="/assets/svgs/post-repost.svg"
+            alt=""
+            width={18}
+            height={18}
+          />
           <p>Repost</p>
         </div>
         <div className='mr-3 flex items-center space-x-1'>
-          <img src="/assets/svgs/post-share.svg" className='w-[18px] h-[18px]' alt="" />
+          <Image
+            src="/assets/svgs/post-share.svg"
+            alt=""
+            width={18}
+            height={18}
+          />
           <p>Share</p>
         </div>
       </div>
