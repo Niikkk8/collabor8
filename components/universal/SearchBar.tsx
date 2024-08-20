@@ -45,7 +45,7 @@ export default function SearchBar() {
             alt=""
             width={48}
             height={48}
-            className='object-cover rounded-full'
+            className='object-cover rounded-full aspect-square'
           />
           <h3 className='text-sm mx-2'>Niket Shah</h3>
           <Image

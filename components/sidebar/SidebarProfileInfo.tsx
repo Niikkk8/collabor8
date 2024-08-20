@@ -10,7 +10,7 @@ export default function SidebarProfileInfo() {
                     alt='' 
                     width={56} 
                     height={56} 
-                    className='object-cover rounded-full' 
+                    className='object-cover rounded-full aspect-square' 
                 />
                 <div className='ml-4'>
                     <h2 className='font-medium leading-5'>Niket Shah</h2>

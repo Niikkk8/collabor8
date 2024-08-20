@@ -13,7 +13,7 @@ export default function PostInput() {
                 alt=""
                 width={48}
                 height={48}
-                className='object-cover rounded-full'
+                className='object-cover rounded-full aspect-square'
               />
               <input
                 type="text"

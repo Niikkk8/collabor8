@@ -6,15 +6,16 @@ export default function Post({ post }: { post: any }) {
 
   return (
     <div className='p-4 border border-dark-600 rounded post-gradient'>
-      <div className='flex justify-between'>
+      <div className='flex justify-between items-start'>
         <div className='flex'>
-          <Image
-            src={profileSrc}
-            alt=""
-            width={48}
-            height={48}
-            className='object-cover rounded-full'
-          />
+          <div className='w-12 h-12 relative'>
+            <Image
+              src={profileSrc}
+              alt=""
+              layout="fill"
+              className='object-cover rounded-full'
+            />
+          </div>
           <div className='ml-3'>
             <div className='flex items-center space-x-2'>
               <h3 className='font-medium'>{profileName}</h3>
@@ -28,8 +29,8 @@ export default function Post({ post }: { post: any }) {
         <Image
           src="/assets/svgs/post-verticalellipsis.svg"
           alt=""
-          width={32}
-          height={32}
+          width={12}
+          height={12}
         />
       </div>
       <p className='py-4 pl-2 border-b border-dark-400 text-sm'>{content}</p>

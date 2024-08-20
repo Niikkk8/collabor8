@@ -21,7 +21,7 @@ export default function SidebarCommunitiesList() {
                             alt=""
                             width={48}
                             height={48}
-                            className="rounded-full object-cover"
+                            className='object-cover rounded-full aspect-square'
                         />
                         <h3 className="text-sm font-medium ml-2">{community.title}</h3>
                     </div>
