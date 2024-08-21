@@ -70,7 +70,7 @@ export default function Home() {
         </div>
         <div className="mt-4 pb-20">
           {posts.map((post, index) => (
-            <Post post={post} />
+            <Post post={post} key={index} />
           ))}
         </div>
       </div>
