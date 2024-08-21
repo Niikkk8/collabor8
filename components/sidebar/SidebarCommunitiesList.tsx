@@ -10,7 +10,7 @@ export default function SidebarCommunitiesList() {
     return (
         <div className="p-6">
             <h3 className="text-sm text-white-800">Communities you&apos;ve joined</h3>
-            <div className="border-b border-white-900 pb-2 mt-2">
+            <div className="border-b border-dark-700 pb-2 mt-2">
                 {communities.map((community, index) => (
                     <div
                         className="flex items-center px-4 py-2 hover:bg-gray-500 hover:bg-opacity-20 hover:duration-300 rounded cursor-pointer"

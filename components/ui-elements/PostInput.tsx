@@ -5,7 +5,7 @@ export default function PostInput() {
   return (
     <div className='bg-dark-800 p-3 rounded-lg'>
       <div className='bg-dark-700 px-4 py-3 rounded'>
-        <div className="border-b border-white-800 pb-6">
+        <div className="border-b border-dark-500 pb-6">
           <div className="flex items-center p-2">
             <div className='flex w-full'>
               <Image

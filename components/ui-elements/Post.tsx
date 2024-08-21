@@ -5,7 +5,7 @@ export default function Post({ post }: { post: any }) {
   const { profileName, profileSrc, userId, followers, time, content, likes, comments } = post;
 
   return (
-    <div className='p-4 border border-dark-600 rounded post-gradient'>
+    <div className='p-4 my-2 border border-dark-700 rounded bg-dark-800'>
       <div className='flex justify-between items-start'>
         <div className='flex'>
           <div className='w-12 h-12 relative'>
@@ -33,49 +33,54 @@ export default function Post({ post }: { post: any }) {
           height={12}
         />
       </div>
-      <p className='py-4 pl-2 border-b border-dark-400 text-sm'>{content}</p>
-      <div className='flex mt-2'>
-        <div className='mr-3 flex items-center space-x-1'>
-          <Image
-            src="/assets/svgs/post-like.svg"
-            alt=""
-            width={18}
-            height={18}
-          />
-          <p>Like</p>
+      <p className='py-4 border-b border-dark-700 text-sm'>{content}</p>
+      <div className='flex justify-between mt-3'>
+        <div className='flex'>
+          <div className='mr-4 flex items-center space-x-1'>
+            <Image
+              src="/assets/svgs/post-like.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+            <p className='text-sm ml-1'>{likes}</p>
+          </div>
+          <div className='mr-4 flex items-center space-x-1'>
+            <Image
+              src="/assets/svgs/post-comment.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+            <p className='text-sm ml-1'>{comments}</p>
+          </div>
+          <div className='mr-4 flex items-center space-x-1'>
+            <Image
+              src="/assets/svgs/post-repost.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+          </div>
+          <div className='mr-4 flex items-center space-x-1'>
+            <Image
+              src="/assets/svgs/post-share.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+          </div>
         </div>
-        <div className='mr-3 flex items-center space-x-1'>
-          <Image
-            src="/assets/svgs/post-comment.svg"
-            alt=""
-            width={18}
-            height={18}
-          />
-          <p>Comment</p>
+        <div>
+          <div className='mr-4 flex items-center space-x-1'>
+            <Image
+              src="/assets/svgs/post-save.svg"
+              alt=""
+              width={20}
+              height={20}
+            />
+          </div>
         </div>
-        <div className='mr-3 flex items-center space-x-1'>
-          <Image
-            src="/assets/svgs/post-repost.svg"
-            alt=""
-            width={18}
-            height={18}
-          />
-          <p>Repost</p>
-        </div>
-        <div className='mr-3 flex items-center space-x-1'>
-          <Image
-            src="/assets/svgs/post-share.svg"
-            alt=""
-            width={18}
-            height={18}
-          />
-          <p>Share</p>
-        </div>
-      </div>
-      <div className='mt-2 flex items-center text-xs text-white-800'>
-        <p>{likes} likes</p>
-        <span className='h-[2px] w-[2px] bg-white-800 mx-2' />
-        <p>{comments} comments</p>
       </div>
     </div>
   );

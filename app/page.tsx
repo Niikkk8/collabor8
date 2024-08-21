@@ -58,7 +58,7 @@ export default function Home() {
 
   return (
     <main className="flex max-h-screen">
-      <div className="w-[75%] border-r border-white-900 py-4 px-6 overflow-scroll no-scrollbar">
+      <div className="w-[75%] border-r border-dark-700 py-4 px-6 overflow-scroll no-scrollbar">
         <PostInput />
         <div className="flex items-center p-2 mt-4 min-w-fit">
           <span className="text-sm text-white-800">Sort By: </span>
@@ -66,13 +66,11 @@ export default function Home() {
             Following
             <Image src="/assets/svgs/searchbar-dropdown.svg" alt="" width={14} height={14} className="ml-1" />
           </p>
-          <div className="flex-grow ml-2 h-[1px] bg-white-800" />
+          <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
         </div>
         <div className="mt-4 pb-20">
           {posts.map((post, index) => (
-            <div key={index} className="my-3">
-              <Post post={post} />
-            </div>
+            <Post post={post} />
           ))}
         </div>
       </div>

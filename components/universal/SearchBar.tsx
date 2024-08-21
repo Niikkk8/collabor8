@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export default function SearchBar() {
   return (
-    <div className='px-6 py-4 flex justify-between w-full border-b border-white-900'>
+    <div className='px-6 py-4 flex justify-between w-full border-b border-dark-700'>
       <div className='flex items-center bg-dark-800 py-3 px-4 rounded w-full mr-20'>
         <Image
           src='/assets/svgs/searchbar-search.svg'

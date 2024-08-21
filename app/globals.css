@@ -8,16 +8,6 @@
   font-family: "Impact", sans-serif;
 }
 
-.post-gradient {
-  background: linear-gradient(
-    360deg,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.57) 52.54%,
-    rgba(0, 0, 0, 0.17) 78.05%,
-    rgba(0, 0, 0, 0) 100%
-  );
-}
-
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
