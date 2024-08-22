@@ -36,7 +36,7 @@ export default function Post({ post }: { post: any }) {
       <p className='py-4 border-b border-dark-700 text-sm'>{content}</p>
       <div className='flex justify-between mt-3'>
         <div className='flex'>
-          <div className='mr-4 flex items-center space-x-1'>
+          <div className='mr-6 flex items-center space-x-1'>
             <Image
               src="/assets/svgs/post-like.svg"
               alt=""
@@ -45,7 +45,7 @@ export default function Post({ post }: { post: any }) {
             />
             <p className='text-sm ml-1'>{likes}</p>
           </div>
-          <div className='mr-4 flex items-center space-x-1'>
+          <div className='mr-6 flex items-center space-x-1'>
             <Image
               src="/assets/svgs/post-comment.svg"
               alt=""
@@ -54,7 +54,7 @@ export default function Post({ post }: { post: any }) {
             />
             <p className='text-sm ml-1'>{comments}</p>
           </div>
-          <div className='mr-4 flex items-center space-x-1'>
+          <div className='mr-6 flex items-center space-x-1'>
             <Image
               src="/assets/svgs/post-repost.svg"
               alt=""
@@ -62,7 +62,7 @@ export default function Post({ post }: { post: any }) {
               height={20}
             />
           </div>
-          <div className='mr-4 flex items-center space-x-1'>
+          <div className='mr-6 flex items-center space-x-1'>
             <Image
               src="/assets/svgs/post-share.svg"
               alt=""
