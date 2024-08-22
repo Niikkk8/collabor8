@@ -9,9 +9,11 @@ export default async function Home() {
     `https://newsdata.io/api/1/news?apikey=${API_KEY}&country=in&language=en&category=technology`
   );
   const data = await response.json();
-  const newsArticles = data.results
-    .filter((article: any) => article.image_url && article.source_icon)
-    .slice(0, 2);
+
+  // Ensure that results is an array
+  const newsArticles = Array.isArray(data.results)
+    ? data.results.filter((article: any) => article.image_url && article.source_icon).slice(0, 2)
+    : [];
 
   const posts = [
     {
