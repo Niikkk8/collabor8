@@ -19,11 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-dark-900 max-h-screen overflow-hidden text-white-500`}>
-        <div className="flex">
+        <div className="flex h-screen">
           <Sidebar />
-          <div className="w-4/5">
+          <div className="w-4/5 flex flex-col">
             <SearchBar />
-            {children}
+            <div className="flex-grow overflow-y-auto no-scrollbar">
+              {children}
+            </div>
           </div>
         </div>
       </body>
