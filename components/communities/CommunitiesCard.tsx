@@ -12,7 +12,7 @@ export default function CommunitiesCard({ community }: { community: any }) {
                     <h3 className='font-semibold truncate'>{community.title}</h3>
                     <p className='text-xs'>{community.members} members</p>
                 </div>
-                <Link href={'/'} className='px-4 py-2 h-fit bg-brand-500 rounded'>Join Community</Link>
+                <Link href={'/communities/1'} className='text-sm px-6 py-2 h-fit bg-brand-500 rounded'>Join Community</Link>
             </div>
         </div>
     );

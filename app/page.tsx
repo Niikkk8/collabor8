@@ -86,7 +86,7 @@ export default async function Home() {
   return (
     <main className="flex h-screen overflow-hidden">
       <div className="w-[75%] border-r border-dark-700 py-4 px-6 overflow-y-scroll no-scrollbar">
-        <PostInput />
+        <PostInput inputPlaceholder={"What's on your mind?"} />
         <div className="flex items-center p-2 mt-4 min-w-fit">
           <span className="text-sm text-white-800">Sort By: </span>
           <p className="flex items-center text-sm ml-2">

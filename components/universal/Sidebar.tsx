@@ -4,8 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import SidebarProfileInfo from '@/components/sidebar/SidebarProfileInfo';
 import SidebarCommunitiesList from '@/components/sidebar/SidebarCommunitiesList';
+import ProfileInfo from '../ui-elements/ProfileInfo';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -22,7 +22,7 @@ export default function Sidebar() {
         <h1 className='text-3xl ml-2' style={{ fontFamily: 'Impact, sans-serif' }}>Collabor8</h1>
       </div>
       <div className='px-6'>
-        <SidebarProfileInfo />
+        <ProfileInfo />
       </div>
       <div className='border-b border-dark-700 p-6'>
         <Link href='/' className={getLinkClasses('/')}>
@@ -53,6 +53,10 @@ export default function Sidebar() {
       <SidebarCommunitiesList />
       <div className='p-6'>
         <p className='text-xs text-white-900'>@2024 Collabor8 All Rights Reserved</p>
+        <p className='text-xs text-white-900'>
+          Developed by&nbsp;
+          <Link href={'https://niket.dev/'} target='_blank' className='text-blue-500 underline'>Niket</Link>
+        </p>
       </div>
     </div>
   );

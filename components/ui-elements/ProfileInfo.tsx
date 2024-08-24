@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 
-export default function SidebarProfileInfo() {
+export default function ProfileInfo() {
     return (
         <div className='bg-dark-800 p-4 mt-2 rounded-lg'>
             <div className='flex items-center'>

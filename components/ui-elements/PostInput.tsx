@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 
-export default function PostInput() {
+export default function PostInput({inputPlaceholder}: {inputPlaceholder: string}) {
   return (
     <div className='bg-dark-800 p-3 rounded-lg'>
       <div className='bg-dark-700 px-4 py-3 rounded'>
@@ -20,7 +20,7 @@ export default function PostInput() {
                 name=""
                 id=""
                 className='ml-3 outline-none bg-transparent w-full'
-                placeholder="What's on your mind?"
+                placeholder={inputPlaceholder}
               />
             </div>
             <div className='flex'>
