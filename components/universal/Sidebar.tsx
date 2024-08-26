@@ -55,7 +55,7 @@ export default function Sidebar() {
         <p className='text-xs text-white-900'>@2024 Collabor8 All Rights Reserved</p>
         <p className='text-xs text-white-900'>
           Developed by&nbsp;
-          <Link href={'https://niket.dev/'} target='_blank' className='text-blue-500 underline'>Niket</Link>
+          <Link href={'https://niket.dev/'} target='_blank' className='text-blue-500 underline'>Niket Shah</Link>
         </p>
       </div>
     </div>
