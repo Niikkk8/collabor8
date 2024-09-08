@@ -57,6 +57,9 @@ export default function page() {
                 <Link href="/profile/saved" className={`relative text-white-800`}>
                     Saved
                 </Link>
+                <Link href="/profile/portfolio" className={`relative text-white-800`}>
+                    Niket's Portfolio
+                </Link>
             </div>
             {posts.map((post, index) => (
                 <Post key={index} post={post} />
