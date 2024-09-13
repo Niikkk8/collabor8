@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/universal/Sidebar";
 import SearchBar from "@/components/universal/SearchBar";
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-dark-900 max-h-screen overflow-hidden text-white-500`}>
+        <Analytics />
         <div className="flex h-screen">
           <Sidebar />
           <div className="w-4/5 flex flex-col">

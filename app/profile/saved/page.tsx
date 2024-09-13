@@ -14,7 +14,7 @@ export default function page() {
                     Saved
                 </Link>
                 <Link href="/profile/portfolio" className={`relative text-white-800`}>
-                    Niket's Portfolio
+                    Niket&apos;s Portfolio
                 </Link>
             </div>
             <h2>Saved Posts</h2>

@@ -14,10 +14,11 @@ export default function page() {
                     Saved
                 </Link>
                 <Link href="/profile/portfolio" className={`relative after:content-[""] after:absolute after:bottom-[-8px] after:left-0 after:w-full after:h-[2px] after:bg-white-500 after:rounded-full' : 'text-white-800'`}>
-                    Niket's Portfolio
+                    Niket&apos;s Portfolio
                 </Link>
             </div>
-            <h2>Niket's Portfolio</h2>
+            <h2>Niket&apos;s Portfolio</h2>
+            (functionality to be implemented later)
         </div>
     )
 }
