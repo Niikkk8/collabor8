@@ -6,6 +6,8 @@ import { AppStore, store } from "@/redux/store";
 import Sidebar from "@/components/universal/Sidebar";
 import SearchBar from "@/components/universal/SearchBar";
 import LoginOptionInterface from "@/components/ui-elements/LoginOptionInterface";
+import LoginModal from "@/components/auth/LoginModal";
+import SignupModal from "@/components/auth/SignupModal";
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
     const storeRef = useRef<AppStore>();
@@ -31,6 +33,8 @@ function AppContent({ children }: { children: React.ReactNode }) {
                     {children}
                 </div>
             </div>
+            <SignupModal />
+            <LoginModal />
             <div className="absolute top-0 left-0 w-full h-full bg-dark-900 bg-opacity-95">
                 <LoginOptionInterface />
             </div>
