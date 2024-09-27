@@ -1,11 +1,16 @@
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { closeSignupModal, openLoginModal } from '@/redux/modalSlice'
 import { Modal, TextField, InputAdornment, IconButton } from "@mui/material";
+import Image from 'next/image';
 import React, { useState, ChangeEvent } from 'react'
+import { auth, db, provider } from '@/firebase'
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 
 interface SignupValues {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -19,10 +24,12 @@ export default function SignupModal() {
   const [signupValues, setSignupValues] = useState<SignupValues>({
     firstName: '',
     lastName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
+  const [error, setError] = useState<string>('');
 
   const handleSignupChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,12 +47,94 @@ export default function SignupModal() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault()
-    console.log(signupValues)
+  async function checkUsernameUniqueness(username: string): Promise<boolean> {
+    const usernameDoc = await getDoc(doc(db, "usernames", username));
+    return !usernameDoc.exists();
   }
 
-  function handleToggleModals(){
+  async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('');
+
+    if (signupValues.password !== signupValues.confirmPassword) {
+      setError("Passwords don't match");
+      return;
+    }
+
+    try {
+      // Check username uniqueness
+      const isUsernameUnique = await checkUsernameUniqueness(signupValues.username);
+      if (!isUsernameUnique) {
+        setError("Username is already taken");
+        return;
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, signupValues.email, signupValues.password);
+      const user = userCredential.user;
+
+      // Store user data in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        userFirstName: signupValues.firstName,
+        userLastName: signupValues.lastName,
+        userID: signupValues.username,
+        userEmail: signupValues.email,
+      });
+
+      // Store username separately for uniqueness check
+      await setDoc(doc(db, "usernames", signupValues.username), {
+        uid: user.uid
+      });
+
+      console.log("User created successfully");
+      dispatch(closeSignupModal());
+    } catch (error) {
+      setError((error as Error).message);
+    }
+  }
+
+  async function handleGoogleSignup() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      if (!user.email) {
+        throw new Error("No email associated with the Google account");
+      }
+
+      // Extract username from email
+      let username = user.email.split('@')[0];
+      let isUnique = false;
+      let counter = 0;
+
+      while (!isUnique) {
+        const testUsername = counter === 0 ? username : `${username}${counter}`;
+        isUnique = await checkUsernameUniqueness(testUsername);
+        if (isUnique) {
+          username = testUsername;
+        } else {
+          counter++;
+        }
+      }
+
+      await setDoc(doc(db, "users", user.uid), {
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        email: user.email,
+        username: username
+      });
+
+      await setDoc(doc(db, "usernames", username), {
+        uid: user.uid
+      });
+
+      console.log("User signed up with Google successfully");
+      dispatch(closeSignupModal());
+    } catch (error) {
+      setError((error as Error).message);
+    }
+  }
+
+  function handleToggleModals() {
     dispatch(closeSignupModal());
     dispatch(openLoginModal())
   }
@@ -66,7 +155,10 @@ export default function SignupModal() {
           </span>
           <form className="flex flex-col w-full text-dark-800 mb-6" onSubmit={handleSubmit}>
             <h1 className='text-center font-bold text-lg mb-2'>Get Started with the Collabor8</h1>
-            <button className='my-2 bg-blue-500 py-2 rounded text-white-500'>Sign up with Google</button>
+            <button type="button" onClick={handleGoogleSignup} className='my-2 bg-blue-500 py-2 rounded text-white-500 flex items-center justify-center'>
+              <Image src={'/logos/google.png'} width={32} height={32} alt='' className='rounded-full bg-white-500 p-1 mr-2' />
+              Signup with Google
+            </button>
             <div className="flex items-center gap-6 mb-4">
               <span className="h-[1px] bg-gray-400 w-[80%]" />
               <p className="text-gray-500">or</p>
@@ -89,6 +181,16 @@ export default function SignupModal() {
                   label="Last Name"
                   fullWidth
                   value={signupValues.lastName}
+                  onChange={handleSignupChange}
+                  required
+                />
+              </div>
+              <div className="col-span-2">
+                <TextField
+                  name="username"
+                  label="Username"
+                  fullWidth
+                  value={signupValues.username}
                   onChange={handleSignupChange}
                   required
                 />
@@ -161,6 +263,7 @@ export default function SignupModal() {
                 />
               </div>
             </div>
+            {error && <p className="text-red-500 mt-2">{error}</p>}
             <button type="submit" className="mt-4 bg-blue-500 py-2 rounded text-white-500">
               Sign Up
             </button>

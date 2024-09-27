@@ -8,6 +8,7 @@ import SearchBar from "@/components/universal/SearchBar";
 import LoginOptionInterface from "@/components/ui-elements/LoginOptionInterface";
 import LoginModal from "@/components/auth/LoginModal";
 import SignupModal from "@/components/auth/SignupModal";
+import { useAuth } from "@/components/auth/useAuth";
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
     const storeRef = useRef<AppStore>();
@@ -24,6 +25,12 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
 }
 
 function AppContent({ children }: { children: React.ReactNode }) {
+    const { currentUser, loading } = useAuth(); // Use the hook to get auth state
+
+    if (loading) {
+        return <div>Loading...</div>; // You can replace this with a loading spinner
+    }
+
     return (
         <div className="flex h-screen relative">
             <Sidebar />
@@ -35,9 +42,11 @@ function AppContent({ children }: { children: React.ReactNode }) {
             </div>
             <SignupModal />
             <LoginModal />
-            <div className="absolute top-0 left-0 w-full h-full bg-dark-900 bg-opacity-95">
-                <LoginOptionInterface />
-            </div>
+            {!currentUser && (
+                <div className="absolute top-0 left-0 w-full h-full bg-dark-900 bg-opacity-95">
+                    <LoginOptionInterface />
+                </div>
+            )}
         </div>
     );
 }
