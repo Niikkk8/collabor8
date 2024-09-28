@@ -1,11 +1,12 @@
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { closeSignupModal, openLoginModal } from '@/redux/modalSlice'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { closeSignupModal, openLoginModal } from '@/redux/modalSlice';
 import { Modal, TextField, InputAdornment, IconButton } from "@mui/material";
 import Image from 'next/image';
-import React, { useState, ChangeEvent } from 'react'
-import { auth, db, provider } from '@/firebase'
-import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import React, { useState, ChangeEvent } from 'react';
+import { auth, db, provider } from '@/firebase';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { setUser } from '@/redux/userSlice'; // Import the action to set user
 
 interface SignupValues {
   firstName: string;
@@ -17,7 +18,7 @@ interface SignupValues {
 }
 
 export default function SignupModal() {
-  const isOpen = useAppSelector((state) => state.modals.signupModal)
+  const isOpen = useAppSelector((state) => state.modals.signupModal);
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
@@ -53,7 +54,7 @@ export default function SignupModal() {
   }
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
     setError('');
 
     if (signupValues.password !== signupValues.confirmPassword) {
@@ -72,20 +73,49 @@ export default function SignupModal() {
       const userCredential = await createUserWithEmailAndPassword(auth, signupValues.email, signupValues.password);
       const user = userCredential.user;
 
+      const defaultUserProfilePicture = '/assets/placeholder-images/profile-picture.jpg';
+      const defaultUserBanner = '/assets/placeholder-images/profile-banner.jpeg';
+
       // Store user data in Firestore
       await setDoc(doc(db, "users", user.uid), {
         userFirstName: signupValues.firstName,
         userLastName: signupValues.lastName,
         userID: signupValues.username,
         userEmail: signupValues.email,
+        userProfilePictureSrc: defaultUserProfilePicture,
+        userProfileBannerSrc: defaultUserBanner,
+        userBio: "",
+        userJoiningDate: new Date(),
+        userFollowers: [],
+        userFollowing: [],
+        userPosts: [],
+        userCommunities: [],
+        userMeetups: [],
       });
+
+      // Dispatch the user information to Redux store
+      dispatch(setUser({
+        userFirstName: signupValues.firstName,
+        userLastName: signupValues.lastName,
+        userID: signupValues.username,
+        userEmail: signupValues.email,
+        userUID: user.uid,
+        userProfilePictureSrc: defaultUserProfilePicture,
+        userProfileBannerSrc: defaultUserBanner,
+        userBio: "",
+        userJoiningDate: new Date(),
+        userFollowers: [],
+        userFollowing: [],
+        userPosts: [],
+        userCommunities: [],
+        userMeetups: []
+      }));
 
       // Store username separately for uniqueness check
       await setDoc(doc(db, "usernames", signupValues.username), {
         uid: user.uid
       });
 
-      console.log("User created successfully");
       dispatch(closeSignupModal());
     } catch (error) {
       setError((error as Error).message);

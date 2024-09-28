@@ -1,0 +1,16 @@
+export type User = {
+    userUID: String,
+    userID: String,
+    userFirstName: String,
+    userLastName: String,
+    userEmail: String,
+    userProfilePictureSrc: String,
+    userProfileBannerSrc: String,
+    userBio: String,
+    userJoiningDate: Date,
+    userFollowers: String[],
+    userFollowing: String[],
+    userPosts: String[],
+    userCommunities: String[],
+    userMeetups: String[],
+}

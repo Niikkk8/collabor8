@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "@/firebase"; // Ensure Firebase Firestore is initialized
 import { onAuthStateChanged, User } from "firebase/auth";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useAppDispatch } from "@/redux/hooks";
 import { setUser, signOutUser } from "@/redux/userSlice";
 import { doc, getDoc } from "firebase/firestore"; // Import Firestore functions
 
@@ -25,13 +25,21 @@ export function useAuth() {
 
                         // Dispatch to Redux the user data from Firestore
                         dispatch(setUser({
+                            userUID: user.uid,
                             userID: userData.userID,
                             userFirstName: userData.userFirstName,
                             userLastName: userData.userLastName,
                             userEmail: userData.userEmail,
-                            userUID: user.uid
+                            userProfilePictureSrc: userData.userProfilePictureSrc,
+                            userProfileBannerSrc: userData.userProfileBannerSrc,
+                            userBio: userData.userBio,
+                            userJoiningDate: userData.userJoiningDate.toDate(),
+                            userFollowers: userData.userFollowers,
+                            userFollowing: userData.userFollowing,
+                            userPosts: userData.userPosts,
+                            userCommunities: userData.userCommunities,
+                            userMeetups: userData.userMeetups
                         }));
-                        
                     } else {
                         console.log("No user document found in Firestore.");
                     }

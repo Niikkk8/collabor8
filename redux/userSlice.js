@@ -1,33 +1,48 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    userID: null,
-    userFirstName: null,
-    userLastName: null,
-    userEmail: null,
-    userUID: null,
-}
+    userUID: "",
+    userID: "",
+    userFirstName: "",
+    userLastName: "",
+    userEmail: "",
+    userProfilePictureSrc: "",
+    userProfileBannerSrc: "",
+    userBio: "",
+    userJoiningDate: new Date(),
+    userFollowers: [],
+    userFollowing: [],
+    userPosts: [],
+    userCommunities: [],
+    userMeetups: []
+};
+
 const userSlice = createSlice({
     name: "user",
     initialState,
     reducers: {
         setUser: (state, action) => {
-            state.userID = action.payload.userID
-            state.userFirstName = action.payload.userFirstName
-            state.userLastName = action.payload.userLastName
-            state.userEmail = action.payload.userEmail
-            state.userUID = action.payload.userUID
+            state.userUID = action.payload.userUID;
+            state.userID = action.payload.userID;
+            state.userFirstName = action.payload.userFirstName;
+            state.userLastName = action.payload.userLastName;
+            state.userEmail = action.payload.userEmail;
+            state.userProfilePictureSrc = action.payload.userProfilePictureSrc;
+            state.userProfileBannerSrc = action.payload.userProfileBannerSrc;
+            state.userBio = action.payload.userBio;
+            state.userJoiningDate = action.payload.userJoiningDate;
+            state.userFollowers = action.payload.userFollowers;
+            state.userFollowing = action.payload.userFollowing;
+            state.userPosts = action.payload.userPosts;
+            state.userCommunities = action.payload.userCommunities;
+            state.userMeetups = action.payload.userMeetups;
         },
         signOutUser: (state) => {
-            state.userID = null,
-                state.userFirstName = null,
-                state.userLastName = null,
-                state.userEmail = null,
-                state.userUID = null
+            Object.assign(state, initialState);
         }
     }
 });
 
-export const { setUser, signOutUser } = userSlice.actions
+export const { setUser, signOutUser } = userSlice.actions;
 
-export default userSlice.reducer
+export default userSlice.reducer;
