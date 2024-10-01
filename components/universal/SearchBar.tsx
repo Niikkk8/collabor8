@@ -1,10 +1,69 @@
-import React from 'react';
+import React, { useCallback, useState, useEffect } from "react";
 import Image from 'next/image';
+import Link from 'next/link';
+import debounce from 'lodash/debounce';
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/firebase";
+
+interface User {
+  id: string;
+  userID: string;
+  userFirstName: string;
+  userLastName: string;
+  userProfilePicture?: string;
+}
 
 export default function SearchBar() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const debouncedSearch = useCallback(
+    debounce(async (term: string) => {
+      if (term.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const usersRef = collection(db, "users");
+        const q = query(
+          usersRef,
+          where("userID", ">=", term),
+          where("userID", "<=", term + "\uf8ff")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const users: User[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const userData = doc.data() as User;
+          users.push({ ...userData, id: doc.id });
+        });
+        setSearchResults(users);
+      } catch (error) {
+        console.error("Error searching users:", error);
+        setSearchResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 750),
+    []
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchTerm);
+  }, [searchTerm, debouncedSearch]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   return (
     <div className='px-6 py-4 flex justify-between w-full border-b border-dark-700'>
-      <div className='flex items-center bg-dark-800 py-3 px-4 rounded w-full mr-20'>
+      <div className='relative flex items-center bg-dark-800 py-3 px-4 rounded w-full mr-20'>
         <Image
           src='/assets/svgs/searchbar-search.svg'
           alt=""
@@ -14,11 +73,36 @@ export default function SearchBar() {
         />
         <input
           type="text"
-          name=""
-          id=""
           className='bg-transparent outline-none w-full ml-3 text-sm'
           placeholder='Search...'
+          value={searchTerm}
+          onChange={handleSearch}
         />
+        {(searchResults.length > 0 || loading) && (
+          <div className="absolute top-full left-0 w-full bg-dark-900 mt-2 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="p-4 text-center">Loading...</div>
+            ) : (
+              searchResults.map((user) => (
+                <Link href={`/profile/${user.userID}`} key={user.id} className="block hover:bg-dark-800 transition-colors duration-200">
+                  <div className="flex items-center p-4">
+                    <Image
+                      src={user.userProfilePicture || "/assets/placeholder-images/profile-picture.jpg"}
+                      alt={`${user.userFirstName} ${user.userLastName}`}
+                      width={60}
+                      height={60}
+                      className="rounded-full aspect-square object-cover"
+                    />
+                    <div className="ml-4">
+                      <h3 className="font-semibold">{user.userFirstName} {user.userLastName}</h3>
+                      <p className="text-sm text-gray-400">{user.userID}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        )}
       </div>
       <div className='flex items-center min-w-fit'>
         <div className='p-3 rounded-lg mx-2 bg-dark-800'>
