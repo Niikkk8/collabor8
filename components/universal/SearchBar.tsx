@@ -4,14 +4,8 @@ import Link from 'next/link';
 import debounce from 'lodash/debounce';
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
+import { User } from "@/types";
 
-interface User {
-  id: string;
-  userID: string;
-  userFirstName: string;
-  userLastName: string;
-  userProfilePicture?: string;
-}
 
 export default function SearchBar() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +34,7 @@ export default function SearchBar() {
 
         querySnapshot.forEach((doc) => {
           const userData = doc.data() as User;
-          users.push({ ...userData, id: doc.id });
+          users.push({ ...userData, userUID: doc.id });
         });
         setSearchResults(users);
       } catch (error) {
@@ -84,10 +78,10 @@ export default function SearchBar() {
               <div className="p-4 text-center">Loading...</div>
             ) : (
               searchResults.map((user) => (
-                <Link href={`/profile/${user.userID}`} key={user.id} className="block hover:bg-dark-800 transition-colors duration-200">
+                <Link href={`/profile/${user.userUID}`} key={String(user.userUID)} className="block hover:bg-dark-800 transition-colors duration-200">
                   <div className="flex items-center p-4">
                     <Image
-                      src={user.userProfilePicture || "/assets/placeholder-images/profile-picture.jpg"}
+                      src={String(user.userProfilePictureSrc) || "/assets/placeholder-images/profile-picture.jpg"}
                       alt={`${user.userFirstName} ${user.userLastName}`}
                       width={60}
                       height={60}
@@ -99,6 +93,7 @@ export default function SearchBar() {
                     </div>
                   </div>
                 </Link>
+
               ))
             )}
           </div>

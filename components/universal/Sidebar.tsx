@@ -6,9 +6,12 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import SidebarCommunitiesList from '@/components/sidebar/SidebarCommunitiesList';
 import ProfileInfo from '../ui-elements/ProfileInfo';
+import { User } from '@/types';
+import { useAppSelector } from '@/redux/hooks';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const user: User = useAppSelector((state) => state.user)
 
   const getLinkClasses = (path: string) => {
     const isActive = pathname === path;
@@ -42,14 +45,14 @@ export default function Sidebar() {
             <Image src={'/assets/svgs/sidebar-notification.svg'} height={20} width={20} alt='' className='mr-3' />
             Notifications
           </Link>
-          <Link href='/profile' className={getLinkClasses('/profile')}>
+          <Link href={`/profile/${user.userUID}`} className={getLinkClasses(`/profile/${user.userUID}`)}>
             <Image src={'/assets/svgs/sidebar-profile.svg'} height={20} width={20} alt='' className='mr-3' />
             Profile
           </Link>
-          <Link href='/settings' className={getLinkClasses('/settings')}>
+          {/* <Link href='/settings' className={getLinkClasses('/settings')}>
             <Image src={'/assets/svgs/sidebar-settings.svg'} height={20} width={20} alt='' className='mr-3' />
             Settings
-          </Link>
+          </Link> */}
         </div>
         <SidebarCommunitiesList />
       </div>

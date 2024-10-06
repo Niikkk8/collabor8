@@ -6,7 +6,7 @@ import React, { useState, ChangeEvent } from 'react';
 import { auth, db, provider } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { setUser } from '@/redux/userSlice'; // Import the action to set user
+import { setUser } from '@/redux/userSlice';
 
 interface SignupValues {
   firstName: string;
@@ -31,13 +31,36 @@ export default function SignupModal() {
     confirmPassword: ''
   });
   const [error, setError] = useState<string>('');
+  const [usernameError, setUsernameError] = useState<string>('');
 
   const handleSignupChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSignupValues(prevValues => ({
-      ...prevValues,
-      [name]: value
-    }));
+    if (name === 'username') {
+      const lowercaseValue = value.toLowerCase();
+      const sanitizedValue = lowercaseValue.replace(/[^a-z0-9_\.]/g, '');
+      setSignupValues(prevValues => ({
+        ...prevValues,
+        [name]: sanitizedValue
+      }));
+      validateUsername(sanitizedValue);
+    } else {
+      setSignupValues(prevValues => ({
+        ...prevValues,
+        [name]: value
+      }));
+    }
+  };
+
+  const validateUsername = (username: string) => {
+    if (username.length < 3) {
+      setUsernameError('Username must be at least 3 characters long');
+    } else if (username.length > 20) {
+      setUsernameError('Username must be no more than 20 characters long');
+    } else if (!/^[a-z0-9_\.]+$/.test(username)) {
+      setUsernameError('Username can only contain lowercase letters, numbers, underscores, and periods');
+    } else {
+      setUsernameError('');
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -49,13 +72,18 @@ export default function SignupModal() {
   };
 
   async function checkUsernameUniqueness(username: string): Promise<boolean> {
-    const usernameDoc = await getDoc(doc(db, "usernames", username));
+    const usernameDoc = await getDoc(doc(db, "usernames", username.toLowerCase()));
     return !usernameDoc.exists();
   }
 
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
+
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
 
     if (signupValues.password !== signupValues.confirmPassword) {
       setError("Passwords don't match");
@@ -80,7 +108,7 @@ export default function SignupModal() {
       await setDoc(doc(db, "users", user.uid), {
         userFirstName: signupValues.firstName,
         userLastName: signupValues.lastName,
-        userID: signupValues.username,
+        userID: signupValues.username.toLowerCase(),
         userEmail: signupValues.email,
         userProfilePictureSrc: defaultUserProfilePicture,
         userProfileBannerSrc: defaultUserBanner,
@@ -97,7 +125,7 @@ export default function SignupModal() {
       dispatch(setUser({
         userFirstName: signupValues.firstName,
         userLastName: signupValues.lastName,
-        userID: signupValues.username,
+        userID: signupValues.username.toLowerCase(),
         userEmail: signupValues.email,
         userUID: user.uid,
         userProfilePictureSrc: defaultUserProfilePicture,
@@ -112,7 +140,7 @@ export default function SignupModal() {
       }));
 
       // Store username separately for uniqueness check
-      await setDoc(doc(db, "usernames", signupValues.username), {
+      await setDoc(doc(db, "usernames", signupValues.username.toLowerCase()), {
         uid: user.uid
       });
 
@@ -132,7 +160,7 @@ export default function SignupModal() {
       }
 
       // Extract username from email
-      let username = user.email.split('@')[0];
+      let username = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_\.]/g, '');
       let isUnique = false;
       let counter = 0;
 
@@ -146,16 +174,46 @@ export default function SignupModal() {
         }
       }
 
+      const defaultUserProfilePicture = '/assets/placeholder-images/profile-picture.jpg';
+      const defaultUserBanner = '/assets/placeholder-images/profile-banner.jpeg';
+
       await setDoc(doc(db, "users", user.uid), {
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        email: user.email,
-        username: username
+        userFirstName: user.displayName?.split(' ')[0] || '',
+        userLastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        userID: username,
+        userEmail: user.email,
+        userProfilePictureSrc: user.photoURL || defaultUserProfilePicture,
+        userProfileBannerSrc: defaultUserBanner,
+        userBio: "",
+        userJoiningDate: new Date(),
+        userFollowers: [],
+        userFollowing: [],
+        userPosts: [],
+        userCommunities: [],
+        userMeetups: [],
       });
 
       await setDoc(doc(db, "usernames", username), {
         uid: user.uid
       });
+
+      // Dispatch user information to Redux store
+      dispatch(setUser({
+        userFirstName: user.displayName?.split(' ')[0] || '',
+        userLastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        userID: username,
+        userEmail: user.email || '',
+        userUID: user.uid,
+        userProfilePictureSrc: user.photoURL || defaultUserProfilePicture,
+        userProfileBannerSrc: defaultUserBanner,
+        userBio: "",
+        userJoiningDate: new Date(),
+        userFollowers: [],
+        userFollowing: [],
+        userPosts: [],
+        userCommunities: [],
+        userMeetups: []
+      }));
 
       console.log("User signed up with Google successfully");
       dispatch(closeSignupModal());
@@ -223,6 +281,8 @@ export default function SignupModal() {
                   value={signupValues.username}
                   onChange={handleSignupChange}
                   required
+                  error={!!usernameError}
+                  helperText={usernameError}
                 />
               </div>
               <div className="col-span-2">
