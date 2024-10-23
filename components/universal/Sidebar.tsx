@@ -26,7 +26,7 @@ export default function Sidebar() {
           <h1 className='text-3xl ml-2' style={{ fontFamily: 'Impact, sans-serif' }}>Collabor8</h1>
         </div>
         <div className='px-6'>
-          <ProfileInfo />
+          <ProfileInfo user={user} />
         </div>
         <div className='border-b border-dark-700 p-6'>
           <Link href='/' className={getLinkClasses('/')}>

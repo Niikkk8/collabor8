@@ -6,9 +6,11 @@ import { setUser } from '@/redux/userSlice';
 import { User } from '@/types';
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import React from 'react';
+import { useRouter } from 'next/navigation';  // Import useRouter
 
 export default function ProfileActionButton({ id }: { id: string }) {
   const dispatch = useAppDispatch();
+  const router = useRouter();  // Initialize router
   const user: User = useAppSelector((state) => state.user);
   const isLoggedInUser: boolean = user.userUID === id;
   const isFollowing: boolean = user.userFollowing.includes(id);
@@ -28,6 +30,8 @@ export default function ProfileActionButton({ id }: { id: string }) {
         ...user,
         userFollowing: [...user.userFollowing, id],
       }));
+
+      router.refresh();
     } catch (error) {
       console.error("Error following user:", error);
     }
@@ -48,6 +52,8 @@ export default function ProfileActionButton({ id }: { id: string }) {
         ...user,
         userFollowing: user.userFollowing.filter(following => following !== id),
       }));
+
+      router.refresh();
     } catch (error) {
       console.error("Error unfollowing user:", error);
     }
@@ -56,7 +62,7 @@ export default function ProfileActionButton({ id }: { id: string }) {
   return (
     <div>
       {isLoggedInUser ? (
-        <button className="mt-24 mr-4 border border-white-800 h-fit text-sm py-2 px-4 rounded-lg">
+        <button className="mt-24 mr-4 border border-white-800 h-fit text-sm py-2 px-6 rounded-lg">
           Edit Profile
         </button>
       ) : (

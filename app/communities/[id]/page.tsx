@@ -1,62 +1,40 @@
-import Post from '@/components/ui-elements/Post';
+// import Post from '@/components/ui-elements/Post';
+import CommunityActionButton from '@/components/communities/CommunityActionButton';
 import PostInput from '@/components/ui-elements/PostInput'
 import ProfileInfo from '@/components/ui-elements/ProfileInfo';
+import { db } from '@/firebase';
+import { Community, User } from '@/types';
+import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import React from 'react'
 
-export default function page() {
-    const posts = [
-        {
-            profileName: "Niket Shah",
-            profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-            userId: "nik8",
-            followers: "20k",
-            time: "10 hrs ago",
-            content: "Excited to share a new tutorial on React Hooks with the Tech Mentors community! Let's dive into custom hooks.",
-            likes: 150,
-            comments: 12,
-        },
-        {
-            profileName: "Jane Doe",
-            profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-            userId: "jane_doe",
-            followers: "326",
-            time: "12 hrs ago",
-            content: "I've been following the morning routine suggested by the Self Improvement Arc, and it's been a game-changer!",
-            likes: 120,
-            comments: 10,
-        },
-        {
-            profileName: "John Smith",
-            profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-            userId: "john_smith",
-            followers: "500",
-            time: "15 hrs ago",
-            content: "Any recommendations on the best resources for learning advanced TypeScript? #TechMentors",
-            likes: 95,
-            comments: 8,
-        },
-        {
-            profileName: "Emma Brown",
-            profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-            userId: "emma_brown",
-            followers: "1.2k",
-            time: "18 hrs ago",
-            content: "Just completed a 30-day challenge from the Self Improvement Arc community. Feeling more productive and focused!",
-            likes: 180,
-            comments: 15,
-        },
-        {
-            profileName: "Michael Lee",
-            profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-            userId: "michael_lee",
-            followers: "800",
-            time: "20 hrs ago",
-            content: "Started a new mentorship session today on Python for Data Science. Loving the enthusiasm in the Tech Mentors community!",
-            likes: 210,
-            comments: 18,
-        },
-    ];
+async function getCommunityData(id: string): Promise<Community | null> {
+    const communityDocRef = doc(db, 'communities', id);
+    const communityDoc = await getDoc(communityDocRef);
+    if (!communityDoc.exists) {
+        return null;
+    }
+    return communityDoc.data() as Community;
+}
+
+async function getAdminData(id: string): Promise<User | null> {
+    const userDocRef = doc(db, 'users', id);
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists) {
+        return null;
+    }
+    return userDoc.data() as User;
+}
+
+export default async function page({ params }: { params: { id: string } }) {
+    const community = await getCommunityData(params.id);
+    const adminData = await getAdminData(community!.communityAdmin)
+    console.log(community)
+
+    if (!community) {
+        return <div>Community not found</div>;
+    }
+
     return (
         <div className='flex h-screen'>
             <div className='p-6 w-3/4 border-r border-dark-700 overflow-y-scroll no-scrollbar'>
@@ -70,33 +48,31 @@ export default function page() {
                     <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
                 </div>
                 <div className="mt-4">
-                    {posts.map((post, index) => (
+                    {/* {posts.map((post, index) => (
                         <Post post={post} key={index} />
-                    ))}
+                    ))} */}
                 </div>
             </div>
             <div className='w-1/4 overflow-scroll no-scrollbar'>
-                <Image src={'/assets/placeholder-images/community-banner.jpg'} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover' />
+                <Image src={community.communityBannerSrc} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover' />
                 <div className='mt-[-76px] p-4 border-b border-dark-700'>
                     <div className='flex justify-between items-center'>
-                        <Image src={'/assets/placeholder-images/developer.jpg'} width={120} height={120} alt='' className='object-cover rounded-full border-4 border-dark-900' />
+                        <Image src={community.communityProfileSrc} width={120} height={120} alt='' className='object-cover rounded-full border-4 border-dark-900' />
                         <Image src={'/assets/svgs/community-ellipsis.svg'} width={28} height={28} alt='' className='mt-8' />
                     </div>
                     <div className='mt-4 flex justify-between items-center'>
-                        <h1 className='text-lg font-semibold w-1/2'>Tech Mentors</h1>
-                        <button className='bg-brand-500 px-6 py-2 rounded'>Join Community</button>
+                        <h1 className='text-lg font-semibold w-1/2 truncate'>{community.communityName}</h1>
+                        <CommunityActionButton communityId={community.communityUID} communityAdmin={community.communityAdmin} />
                     </div>
                     <div className='bg-dark-800 mt-4 py-2 px-4 rounded'>
-                        <p className='text-sm'>476,910 members</p>
+                        <p className='text-sm'>{community.communityMembers.length} members</p>
 
                     </div>
-                    <p className='text-sm my-6'>Interested in programming things? Like to read about programming without seeing a constant flow of technology and political news into your proggit? That&apos;s what this community
-                        is for. A pure discussion of programming with a strict policy of programming-related discussions.
-                    </p>
+                    <p className='text-sm my-6'>{community.communityDescription}</p>
                 </div>
                 <div className='p-4'>
                     <h1 className='font-medium'>Admin</h1>
-                    <ProfileInfo />
+                    <ProfileInfo user={adminData!} />
                 </div>
             </div>
         </div>

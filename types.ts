@@ -22,5 +22,7 @@ export type Community = {
     communityCreatedAt: Date,
     communityMembers: string[],
     communityAdmin: string,
+    communityProfileSrc: string,
+    communityBannerSrc: string,
   }
   
