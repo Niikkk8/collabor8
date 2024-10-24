@@ -38,7 +38,7 @@ export default async function page({ params }: { params: { id: string } }) {
     return (
         <div className='flex h-screen'>
             <div className='p-6 w-3/4 border-r border-dark-700 overflow-y-scroll no-scrollbar'>
-                <PostInput inputPlaceholder='Make a post in this community!' />
+                <PostInput inputPlaceholder='Make a post in this community!' communityId={params.id} />
                 <div className="flex items-center p-2 mt-4 min-w-fit">
                     <span className="text-sm text-white-800">Sort By: </span>
                     <p className="flex items-center text-sm ml-2">
