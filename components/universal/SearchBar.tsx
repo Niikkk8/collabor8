@@ -4,11 +4,14 @@ import Link from 'next/link';
 import debounce from 'lodash/debounce';
 import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
-import { User } from "@/types";
+import { User, Community } from "@/types";  // Assuming you have a Community type
+import { useAppSelector } from "@/redux/hooks";
 
 export default function SearchBar() {
+  const user: User = useAppSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [userResults, setUserResults] = useState<User[]>([]);
+  const [communityResults, setCommunityResults] = useState<Community[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +20,8 @@ export default function SearchBar() {
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
       if (term.length < 2) {
-        setSearchResults([]);
+        setUserResults([]);
+        setCommunityResults([]);
         setError(null);
         return;
       }
@@ -27,11 +31,11 @@ export default function SearchBar() {
 
       try {
         const usersRef = collection(db, "users");
-        const snapshot = await getDocs(query(usersRef));
+        const userSnapshot = await getDocs(query(usersRef));
         const users: User[] = [];
         const searchTermLower = term.toLowerCase();
 
-        snapshot.forEach((doc) => {
+        userSnapshot.forEach((doc) => {
           const userData = doc.data() as User;
           const userUID = doc.id;
           const matchesSearch =
@@ -44,15 +48,32 @@ export default function SearchBar() {
           }
         });
 
-        if (users.length === 0) {
-          setError('No users found');
-        }
+        setUserResults(users);
 
-        setSearchResults(users);
+        const communitiesRef = collection(db, "communities");
+        const communitySnapshot = await getDocs(query(communitiesRef));
+        const communities: Community[] = [];
+
+        communitySnapshot.forEach((doc) => {
+          const communityData = doc.data() as Community;
+          const communityUID = doc.id;
+          const matchesCommunitySearch = communityData.communityName?.toLowerCase().includes(searchTermLower);
+
+          if (matchesCommunitySearch) {
+            communities.push({ ...communityData, communityUID });
+          }
+        });
+
+        setCommunityResults(communities);
+
+        if (users.length === 0 && communities.length === 0) {
+          setError('No users or communities found');
+        }
       } catch (error) {
-        console.error("Error searching users:", error);
+        console.error("Error searching:", error);
         setError('An error occurred while searching');
-        setSearchResults([]);
+        setUserResults([]);
+        setCommunityResults([]);
       } finally {
         setLoading(false);
       }
@@ -61,7 +82,7 @@ export default function SearchBar() {
   );
 
   useEffect(() => {
-    debouncedSearch(searchTerm)
+    debouncedSearch(searchTerm);
     return () => {
       debouncedSearch.cancel();
     };
@@ -74,7 +95,8 @@ export default function SearchBar() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setSearchResults([]);
+        setUserResults([]);
+        setCommunityResults([]);
         setSearchTerm('');
         setError(null);
       }
@@ -99,11 +121,11 @@ export default function SearchBar() {
         <input
           type="text"
           className='bg-transparent outline-none w-full ml-3 text-sm text-white placeholder-gray-400'
-          placeholder='Search users...'
+          placeholder='Search users or communities...'
           value={searchTerm}
           onChange={handleSearch}
         />
-        {(searchResults.length > 0 || loading || error) && (
+        {(userResults.length > 0 || communityResults.length > 0 || loading || error) && (
           <div className="absolute top-full left-0 w-full bg-dark-900 mt-2 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center">
@@ -113,33 +135,72 @@ export default function SearchBar() {
             ) : error ? (
               <div className="p-4 text-center text-gray-400">{error}</div>
             ) : (
-              searchResults.map((user) => (
-                <Link
-                  href={`/profile/${user.userUID}`}
-                  key={String(user.userUID)}
-                  onClick={() => {
-                    setSearchResults([]);
-                    setSearchTerm('');
-                    setError(null);
-                  }}
-                >
-                  <div className="hover:bg-dark-800 transition-colors duration-200 flex items-center p-4">
-                    <Image
-                      src={String(user.userProfilePictureSrc) || "/assets/placeholder-images/profile-picture.jpg"}
-                      alt={`${user.userFirstName} ${user.userLastName}`}
-                      width={60}
-                      height={60}
-                      className="rounded-full aspect-square object-cover"
-                    />
-                    <div className="ml-4">
-                      <h3 className="font-semibold text-white">
-                        {user.userFirstName} {user.userLastName}
-                      </h3>
-                      <p className="text-sm text-gray-400">@{user.userID}</p>
-                    </div>
+              <>
+                {userResults.length > 0 && (
+                  <div>
+                    <h4 className="text-gray-400 px-4 py-2 border-b border-dark-700">Users</h4>
+                    {userResults.map((user) => (
+                      <Link
+                        href={`/profile/${user.userUID}`}
+                        key={String(user.userUID)}
+                        onClick={() => {
+                          setUserResults([]);
+                          setSearchTerm('');
+                          setError(null);
+                        }}
+                      >
+                        <div className="hover:bg-dark-800 transition-colors duration-200 flex items-center p-4">
+                          <Image
+                            src={String(user.userProfilePictureSrc) || "/assets/placeholder-images/profile-picture.jpg"}
+                            alt={`${user.userFirstName} ${user.userLastName}`}
+                            width={60}
+                            height={60}
+                            className="rounded-full aspect-square object-cover"
+                          />
+                          <div className="ml-4">
+                            <h3 className="font-semibold text-white">
+                              {user.userFirstName} {user.userLastName}
+                            </h3>
+                            <p className="text-sm text-gray-400">@{user.userID}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                </Link>
-              ))
+                )}
+                {communityResults.length > 0 && (
+                  <div>
+                    <h4 className="text-gray-400 px-4 py-2 border-b border-dark-700">Communities</h4>
+                    {communityResults.map((community) => (
+                      <Link
+                        href={`/communities/${community.communityUID}`}
+                        key={String(community.communityUID)}
+                        onClick={() => {
+                          setCommunityResults([]);
+                          setSearchTerm('');
+                          setError(null);
+                        }}
+                      >
+                        <div className="hover:bg-dark-800 transition-colors duration-200 flex items-center p-4">
+                          <Image
+                            src={String(community.communityProfileSrc) || "/assets/placeholder-images/profile-picture.jpg"}
+                            alt={`${community.communityName}`}
+                            width={60}
+                            height={60}
+                            className="rounded-full aspect-square object-cover"
+                          />
+                          <div className="ml-4">
+                            <h3 className="font-semibold text-white">
+                              {community.communityName}
+                            </h3>
+                            <p className="text-sm text-gray-400">{community.communityDescription}</p>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -163,22 +224,24 @@ export default function SearchBar() {
             className='w-[22px] h-[22px]'
           />
         </div>
-        <div className='flex items-center ml-4'>
-          <Image
-            src="/assets/placeholder-images/profile-picture.jpg"
-            alt="User Profile Picture"
-            width={48}
-            height={48}
-            className='object-cover rounded-full aspect-square'
-          />
-          <h3 className='text-sm mx-2 text-white'>Niket Shah</h3>
-          <Image
-            src='/assets/svgs/searchbar-dropdown.svg'
-            alt="Dropdown Icon"
-            width={18}
-            height={18}
-            className='w-[18px] h-[18px]'
-          />
+        <div>
+          <div className='flex items-center ml-4'>
+            <Image
+              src="/assets/placeholder-images/profile-picture.jpg"
+              alt="User Profile Picture"
+              width={48}
+              height={48}
+              className='object-cover rounded-full aspect-square'
+            />
+            <h3 className='text-sm ml-2 mr-1 text-white'>{user.userFirstName} {user.userLastName}</h3>
+            <Image
+              src='/assets/svgs/searchbar-dropdown.svg'
+              alt="Dropdown Icon"
+              width={18}
+              height={18}
+              className='w-[18px] h-[18px]'
+            />
+          </div>
         </div>
       </div>
     </div>

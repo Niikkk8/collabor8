@@ -102,7 +102,7 @@ export default async function Home() {
         </div>
       </div>
       <div className="w-[25%] max-h-screen overflow-y-scroll no-scrollbar p-6">
-        <h4 className="text-sm text-white-800 pb-4">What&apos;s happening today!</h4>
+        <h4 className="text-sm text-white-800">What&apos;s happening today!</h4>
         <div className="border-b border-dark-700 pb-4">
           {newsArticles.map((article: any, index: number) => (
             <Link href={article.link} target='_blank' key={index}>
