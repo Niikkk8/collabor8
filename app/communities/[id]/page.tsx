@@ -1,39 +1,67 @@
-// import Post from '@/components/ui-elements/Post';
+'use client';
+
 import CommunityActionButton from '@/components/communities/CommunityActionButton';
-import PostInput from '@/components/ui-elements/PostInput'
+import PostInput from '@/components/ui-elements/PostInput';
+import Post from '@/components/ui-elements/Post';
 import ProfileInfo from '@/components/ui-elements/ProfileInfo';
 import { db } from '@/firebase';
-import { Community, User } from '@/types';
-import { doc, getDoc } from 'firebase/firestore';
+import { Community, User, Post as PostType } from '@/types';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import Image from 'next/image';
-import React from 'react'
-
-async function getCommunityData(id: string): Promise<Community | null> {
-    const communityDocRef = doc(db, 'communities', id);
-    const communityDoc = await getDoc(communityDocRef);
-    if (!communityDoc.exists) {
-        return null;
-    }
-    return communityDoc.data() as Community;
-}
+import React, { useEffect, useState } from 'react';
+import getCommunitiesData from '@/components/helpers/fetchCommunityData';
 
 async function getAdminData(id: string): Promise<User | null> {
     const userDocRef = doc(db, 'users', id);
     const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists) {
-        return null;
-    }
-    return userDoc.data() as User;
+    return userDoc.exists() ? (userDoc.data() as User) : null;
 }
 
-export default async function page({ params }: { params: { id: string } }) {
-    const community = await getCommunityData(params.id);
-    const adminData = await getAdminData(community!.communityAdmin)
-    console.log(community)
+async function getCommunityPosts(communityId: string): Promise<PostType[]> {
+    const postsQuery = query(
+        collection(db, 'posts'),
+        where('postCommunityId', '==', communityId)
+    );
 
-    if (!community) {
-        return <div>Community not found</div>;
-    }
+    const postsSnapshot = await getDocs(postsQuery);
+    return postsSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+            postUID: doc.id,
+            postContent: data.postContent,
+            postImageSrc: data.postImageSrc,
+            postCreatedAt: data.postCreatedAt.toDate(),
+            postAuthorId: data.postAuthorId,
+            postAuthorName: data.postAuthorName,
+            postCommunityId: data.postCommunityId,
+            postLikes: data.postLikes || [],
+            postComments: data.postComments || [],
+        } as PostType;
+    }).sort((a, b) => b.postCreatedAt.getTime() - a.postCreatedAt.getTime());
+}
+
+export default function Page({ params }: { params: { id: string } }) {
+    const [community, setCommunity] = useState<Community | null>(null);
+    const [adminData, setAdminData] = useState<User | null>(null);
+    const [posts, setPosts] = useState<PostType[]>([]);
+
+    useEffect(() => {
+        async function fetchData() {
+            const communityData = await getCommunitiesData(params.id);
+            if (communityData) {
+                setCommunity(communityData);
+                const [admin, communityPosts] = await Promise.all([
+                    getAdminData(communityData.communityAdmin),
+                    getCommunityPosts(params.id),
+                ]);
+                setAdminData(admin);
+                setPosts(communityPosts);
+            }
+        }
+        fetchData();
+    }, [params.id]);
+
+    if (!community) return <div>Community not found</div>;
 
     return (
         <div className='flex h-screen'>
@@ -47,10 +75,16 @@ export default async function page({ params }: { params: { id: string } }) {
                     </p>
                     <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
                 </div>
-                <div className="mt-4">
-                    {/* {posts.map((post, index) => (
-                        <Post post={post} key={index} />
-                    ))} */}
+                <div className="mt-4 space-y-4">
+                    {posts.length === 0 ? (
+                        <div className="flex justify-center items-center p-8 text-white-800">
+                            No posts in this community yet
+                        </div>
+                    ) : (
+                        posts.map((post) => (
+                            <Post key={post.postUID} post={post} />
+                        ))
+                    )}
                 </div>
             </div>
             <div className='w-1/4 overflow-scroll no-scrollbar'>
@@ -66,15 +100,14 @@ export default async function page({ params }: { params: { id: string } }) {
                     </div>
                     <div className='bg-dark-800 mt-4 py-2 px-4 rounded'>
                         <p className='text-sm'>{community.communityMembers.length} members</p>
-
                     </div>
                     <p className='text-sm my-6'>{community.communityDescription}</p>
                 </div>
                 <div className='p-4'>
                     <h1 className='font-medium'>Admin</h1>
-                    <ProfileInfo user={adminData!} />
+                    {adminData && <ProfileInfo user={adminData} />}
                 </div>
             </div>
         </div>
-    )
+    );
 }

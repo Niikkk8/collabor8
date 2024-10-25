@@ -1,74 +1,50 @@
+'use client'
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Post from '@/components/ui-elements/Post';
 import PostInput from '@/components/ui-elements/PostInput';
 import Link from 'next/link';
+import { db } from '@/firebase';
+import { collection, query, where, orderBy, getDocs, limit as firestoreLimit, DocumentData, CollectionReference } from 'firebase/firestore';
+import { useAppSelector } from '@/redux/hooks';
+import { Post as PostType, User } from '@/types';
 
-export default async function Home() {
-  const API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
+interface NewsArticle {
+  link: string;
+  image_url: string;
+  title: string;
+  source_icon: string;
+  source_name: string;
+  pubDate: string;
+}
+
+interface Event {
+  imageSrc: string;
+  title: string;
+  date: string;
+  location: string;
+}
+
+async function fetchNews() {
+  const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
   const response = await fetch(
-    `https://newsdata.io/api/1/news?apikey=${API_KEY}&country=in&language=en&category=technology`
+    `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&country=in&language=en&category=technology`
   );
   const data = await response.json();
 
-  // Ensure that results is an array
-  const newsArticles = Array.isArray(data.results)
+  return Array.isArray(data.results)
     ? data.results.filter((article: any) => article.image_url && article.source_icon).slice(0, 2)
     : [];
+}
 
-  const posts = [
-    {
-      profileName: "Niket Shah",
-      profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-      userId: "nik8",
-      followers: "20k",
-      time: "10 hrs ago",
-      content: "Excited to share a new tutorial on React Hooks with the Tech Mentors community! Let's dive into custom hooks.",
-      likes: 150,
-      comments: 12,
-    },
-    {
-      profileName: "Jane Doe",
-      profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-      userId: "jane_doe",
-      followers: "326",
-      time: "12 hrs ago",
-      content: "I've been following the morning routine suggested by the Self Improvement Arc, and it's been a game-changer!",
-      likes: 120,
-      comments: 10,
-    },
-    {
-      profileName: "John Smith",
-      profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-      userId: "john_smith",
-      followers: "500",
-      time: "15 hrs ago",
-      content: "Any recommendations on the best resources for learning advanced TypeScript? #TechMentors",
-      likes: 95,
-      comments: 8,
-    },
-    {
-      profileName: "Emma Brown",
-      profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-      userId: "emma_brown",
-      followers: "1.2k",
-      time: "18 hrs ago",
-      content: "Just completed a 30-day challenge from the Self Improvement Arc community. Feeling more productive and focused!",
-      likes: 180,
-      comments: 15,
-    },
-    {
-      profileName: "Michael Lee",
-      profileSrc: "/assets/placeholder-images/profile-picture.jpg",
-      userId: "michael_lee",
-      followers: "800",
-      time: "20 hrs ago",
-      content: "Started a new mentorship session today on Python for Data Science. Loving the enthusiasm in the Tech Mentors community!",
-      likes: 210,
-      comments: 18,
-    },
-  ];
+export default function Home() {
+  const [posts, setPosts] = useState<PostType[]>([]);
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const currentUser: User = useAppSelector((state) => state.user);
 
-  const upcomingEvents = [
+  const upcomingEvents: Event[] = [
     {
       imageSrc: "/assets/placeholder-images/individual-event.jpeg",
       title: "Strategies for Revenue Boost: E-commerce Excellence",
@@ -82,6 +58,140 @@ export default async function Home() {
       location: "Online",
     },
   ];
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        if (!currentUser?.userUID) {
+          console.error('No user found');
+          return;
+        }
+
+        const postsRef: CollectionReference<DocumentData> = collection(db, 'posts');
+        const POSTS_PER_QUERY = 20;
+
+        // Add followed users' posts if any
+        if (currentUser.userFollowing?.length > 0) {
+          // Handle followed users in chunks of 10
+          const followingChunks = chunk(currentUser.userFollowing, 10);
+          for (const followingChunk of followingChunks) {
+            // Create separate queries for each chunk
+            const q = query(
+              postsRef,
+              where('postAuthorId', 'in', followingChunk),
+              orderBy('postCreatedAt', 'desc'),
+              firestoreLimit(POSTS_PER_QUERY)
+            );
+            const chunkSnapshot = await getDocs(q);
+            const chunkPosts: PostType[] = [];
+            chunkSnapshot.forEach((doc) => {
+              const postData = doc.data();
+              chunkPosts.push({
+                postUID: doc.id,
+                postContent: postData.postContent,
+                postImageSrc: postData.postImageSrc,
+                postCreatedAt: postData.postCreatedAt.toDate(),
+                postAuthorId: postData.postAuthorId,
+                postAuthorName: postData.postAuthorName,
+                postCommunityId: postData.postCommunityId,
+                postLikes: postData.postLikes || [],
+                postComments: postData.postComments || [],
+              });
+            });
+            setPosts(prev => [...prev, ...chunkPosts]);
+          }
+        }
+
+        // Add community posts if any
+        if (currentUser.userCommunities?.length > 0) {
+          // Handle communities in chunks of 10
+          const communityChunks = chunk(currentUser.userCommunities, 10);
+          for (const communityChunk of communityChunks) {
+            const q = query(
+              postsRef,
+              where('postCommunityId', 'in', communityChunk),
+              orderBy('postCreatedAt', 'desc'),
+              firestoreLimit(POSTS_PER_QUERY)
+            );
+            const chunkSnapshot = await getDocs(q);
+            const chunkPosts: PostType[] = [];
+            chunkSnapshot.forEach((doc) => {
+              const postData = doc.data();
+              chunkPosts.push({
+                postUID: doc.id,
+                postContent: postData.postContent,
+                postImageSrc: postData.postImageSrc,
+                postCreatedAt: postData.postCreatedAt.toDate(),
+                postAuthorId: postData.postAuthorId,
+                postAuthorName: postData.postAuthorName,
+                postCommunityId: postData.postCommunityId,
+                postLikes: postData.postLikes || [],
+                postComments: postData.postComments || [],
+              });
+            });
+            setPosts(prev => [...prev, ...chunkPosts]);
+          }
+        }
+
+        // Get own posts
+        const ownPostsQuery = query(
+          postsRef,
+          where('postAuthorId', '==', currentUser.userUID),
+          orderBy('postCreatedAt', 'desc'),
+          firestoreLimit(POSTS_PER_QUERY)
+        );
+
+        const ownPostsSnapshot = await getDocs(ownPostsQuery);
+        const ownPosts: PostType[] = [];
+        ownPostsSnapshot.forEach((doc) => {
+          const postData = doc.data();
+          ownPosts.push({
+            postUID: doc.id,
+            postContent: postData.postContent,
+            postImageSrc: postData.postImageSrc,
+            postCreatedAt: postData.postCreatedAt.toDate(),
+            postAuthorId: postData.postAuthorId,
+            postAuthorName: postData.postAuthorName,
+            postCommunityId: postData.postCommunityId,
+            postLikes: postData.postLikes || [],
+            postComments: postData.postComments || [],
+          });
+        });
+        setPosts(prev => [...prev, ...ownPosts]);
+
+        // Remove duplicates and sort all posts by date
+        setPosts(prev => {
+          // Remove duplicates based on postUID
+          const uniquePosts = Array.from(
+            new Map(prev.map(post => [post.postUID, post])).values()
+          );
+          // Sort by date
+          return uniquePosts.sort(
+            (a, b) => b.postCreatedAt.getTime() - a.postCreatedAt.getTime()
+          );
+        });
+
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Helper function to split arrays into chunks
+    function chunk<T>(array: T[], size: number): T[][] {
+      const chunked: T[][] = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+      }
+      return chunked;
+    }
+
+    // Reset posts when user changes
+    setPosts([]);
+    setIsLoading(true);
+    fetchPosts();
+  }, [currentUser]);
 
   return (
     <main className="flex h-screen overflow-hidden">
@@ -96,15 +206,25 @@ export default async function Home() {
           <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
         </div>
         <div className="mt-4">
-          {posts.map((post, index) => (
-            <Post post={post} key={index} />
-          ))}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            </div>
+          ) : posts.length > 0 ? (
+            posts.map((post) => (
+              <Post key={post.postUID} post={post} />
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              No posts to show. Start following people or join communities to see posts!
+            </div>
+          )}
         </div>
       </div>
       <div className="w-[25%] max-h-screen overflow-y-scroll no-scrollbar p-6">
         <h4 className="text-sm text-white-800">What&apos;s happening today!</h4>
         <div className="border-b border-dark-700 pb-4">
-          {newsArticles.map((article: any, index: number) => (
+          {newsArticles.map((article, index) => (
             <Link href={article.link} target='_blank' key={index}>
               <div className="my-3 relative">
                 <Image

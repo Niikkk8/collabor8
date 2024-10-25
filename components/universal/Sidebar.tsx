@@ -13,8 +13,8 @@ export default function Sidebar() {
   const pathname = usePathname();
   const user: User = useAppSelector((state) => state.user)
 
-  const getLinkClasses = (path: string) => {
-    const isActive = pathname === path;
+  const getLinkClasses = (path: string, containsString?: boolean) => {
+    const isActive = (containsString ? pathname.includes(path) : pathname === path);
     return `flex items-center text-sm font-medium py-3 px-4 rounded my-1 ${!isActive && 'hover:bg-gray-700 hover:bg-opacity-50'} hover:duration-300 ${isActive ? 'bg-brand-500' : ''}`;
   };
 
@@ -45,7 +45,7 @@ export default function Sidebar() {
             <Image src={'/assets/svgs/sidebar-notification.svg'} height={20} width={20} alt='' className='mr-3' />
             Notifications
           </Link>
-          <Link href={`/profile/${user.userUID}`} className={getLinkClasses(`/profile/${user.userUID}`)}>
+          <Link href={`/profile/${user.userUID}`} className={getLinkClasses(`/profile/${user.userUID}`, true)}>
             <Image src={'/assets/svgs/sidebar-profile.svg'} height={20} width={20} alt='' className='mr-3' />
             Profile
           </Link>

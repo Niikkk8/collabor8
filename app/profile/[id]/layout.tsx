@@ -7,7 +7,7 @@ import ProfileTabs from '@/components/profile/ProfileTabs';
 import ProfileActionButton from '@/components/profile/ProfileActionButton';
 
 async function getUserData(id: string): Promise<User | null> {
-    const userDocRef = doc(db, 'users', id); // Adjust the collection name if needed
+    const userDocRef = doc(db, 'users', id);
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists) {
         return null;
