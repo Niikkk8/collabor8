@@ -5,7 +5,7 @@ import { db } from '@/firebase';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setUser } from '@/redux/userSlice';
 import { Community, User } from '@/types';
-import { addDoc, arrayUnion, collection, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
 export default function CommunitiesPage() {
@@ -13,6 +13,7 @@ export default function CommunitiesPage() {
   const user: User = useAppSelector((state) => state.user)
 
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
+  const [notJoinedCommunities, setNotJoinedCommunities] = useState<Community[]>([]);
   const [displayAllCommunities, setDisplayAllCommunities] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -27,12 +28,6 @@ export default function CommunitiesPage() {
     communityProfileSrc: '/assets/placeholder-images/developer.jpg',
     communityBannerSrc: '/assets/placeholder-images/community-banner.jpg'
   });
-
-  const communities = [
-    { title: 'Tech Mentors', profileURL: '/assets/placeholder-images/developer.jpg', banner: '/assets/placeholder-images/community-banner.jpg', members: '18k' },
-    { title: 'The Self Improvement Arc', profileURL: '/assets/placeholder-images/self-improvement.jpeg', banner: '/assets/placeholder-images/community-banner.jpg', members: '20k' },
-    { title: 'Code Wizards', profileURL: '/assets/placeholder-images/developer.jpg', banner: '/assets/placeholder-images/community-banner.jpg', members: '30k' },
-  ];
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -68,8 +63,49 @@ export default function CommunitiesPage() {
       }
     };
 
+    const fetchNotJoinedCommunities = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let q;
+        if (!user.userCommunities || user.userCommunities.length === 0) {
+          q = query(collection(db, 'communities'));
+        } else {
+          q = query(
+            collection(db, 'communities'),
+            where('communityMembers', 'not-in', [user.userUID])
+          );
+        }
+
+        const querySnapshot = await getDocs(q);
+        const communitiesData: Community[] = [];
+
+        querySnapshot.forEach((doc) => {
+          if (!user.userCommunities?.includes(doc.id)) {
+            communitiesData.push({
+              ...doc.data(),
+              communityUID: doc.id,
+            } as Community);
+          }
+        });
+
+        const sortedCommunities = communitiesData.sort((a, b) =>
+          (b.communityMembers?.length || 0) - (a.communityMembers?.length || 0)
+        );
+
+        setNotJoinedCommunities(sortedCommunities);
+      } catch (error) {
+        console.error('Error fetching not joined communities:', error);
+        setError('An error occurred while fetching communities');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCommunities();
-  }, [user.userCommunities]);
+    fetchNotJoinedCommunities();
+  }, [user.userCommunities, user.userUID]);
 
   console.log(joinedCommunities)
 
@@ -150,10 +186,10 @@ export default function CommunitiesPage() {
         ) : joinedCommunities.length === 0 ? (
           <p className="text-white-6  00 bg-dark-700 w-fit py-2 px-6 rounded mt-6">You have not joined any communities yet.</p>
         ) : (
-          <div className='flex flex-wrap justify-between'>
+          <div className='flex flex-wrap'>
             {visibleCommunities.map((community) => (
               <div key={community.communityUID} className='w-[32%] mx-2'>
-                <CommunitiesCard community={community} />
+                <CommunitiesCard community={community} user={user} />
               </div>
             ))}
           </div>
@@ -173,56 +209,80 @@ export default function CommunitiesPage() {
         )}
       </div>
 
-      {/* <div className='border-b border-dark-700 py-6'>
-        <h2 className='text-lg font-medium'>Communities</h2>
-        <p className='text-xs text-white-800 mb-2'>Browse most popular communities</p>
-        <div className='flex flex-wrap justify-between'>
-          {communities.map((community: any, index: number) => (
-            <div key={index} className='w-[32%] mx-2'>
-              <CommunitiesCard community={community} />
-            </div>
-          ))}
-        </div>
-      </div> */}
+      <div className='border-b border-dark-700 py-6'>
+        <h2 className='text-lg font-medium'>Discover Communities</h2>
+        <p className='text-xs text-white-800 mb-2'>Browse popular communities you haven&apos;t joined yet</p>
+        {loading ? (
+          <p className="text-gray-400">Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : notJoinedCommunities.length === 0 ? (
+          <p className="text-white-600 bg-dark-700 w-fit py-2 px-6 rounded mt-6">
+            No new communities to join at the moment.
+          </p>
+        ) : (
+          <div className='flex flex-wrap'>
+            {notJoinedCommunities.slice(0, 6).map((community) => (
+              <div key={community.communityUID} className='w-[32%] mx-2'>
+                <CommunitiesCard community={community} user={user} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {isModalOpen && (
-        <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full">
-          <div
-            className="fixed top-0 left-0 w-full h-full bg-black opacity-50"
-            onClick={() => setIsModalOpen(false)}
-          />
-          <div className="relative w-[50%] min-w-[280px] max-w-[520px] px-6 py-12 bg-white-500 flex flex-col items-center justify-center rounded-lg overflow-hidden">
-            <span
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-dark-800 rounded-lg shadow-xl">
+            <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute cursor-pointer top-5 right-5 px-[10px] py-[3px] rounded-full bg-red-500"
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-dark-600 transition-colors"
             >
-              X
-            </span>
+              <p className="cursor-pointer px-[10px] py-[3px] rounded-full bg-red-500">X</p>
+            </button>
+            <div className="p-6">
+              <h2 className="text-2xl font-semibold text-white-500 mb-6">Create Community</h2>
 
-            <form className="flex flex-col w-full text-dark-800 mb-6" onSubmit={handleSubmit}>
-              <label className="text-sm mb-2">Community Name</label>
-              <input
-                type="text"
-                name="communityName"
-                value={formData.communityName}
-                onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border border-gray-400 rounded"
-              />
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                <div className="space-y-2">
+                  <label htmlFor="communityName" className="block text-sm font-medium text-white-300">
+                    Community Name
+                  </label>
+                  <input
+                    type="text"
+                    name="communityName"
+                    value={formData.communityName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-md text-white-500 placeholder-dark-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="Enter community name"
+                  />
+                </div>
 
-              <label className="text-sm mb-2">Community Description</label>
-              <textarea
-                name="communityDescription"
-                value={formData.communityDescription}
-                onChange={handleInputChange}
-                required
-                className="mb-4 p-2 border border-gray-400 rounded"
-              />
+                <div className="space-y-2">
+                  <label htmlFor="communityDescription" className="block text-sm font-medium text-white-300">
+                    Community Description
+                  </label>
+                  <textarea
+                    name="communityDescription"
+                    value={formData.communityDescription}
+                    onChange={handleInputChange}
+                    required rows={4}
+                    className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-md text-white-500 placeholder-dark-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                    placeholder="Describe your community..."
+                  />
+                </div>
 
-              <button type="submit" className="bg-brand-500 px-6 py-2 rounded text-white-500">
-                Create Community
-              </button>
-            </form>
+                <div className="pt-4">
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 bg-brand-500 text-white-500 rounded-md font-medium hover:bg-brand-600 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-dark-800"
+                  >
+                    Create Community
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

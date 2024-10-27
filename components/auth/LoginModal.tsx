@@ -1,5 +1,5 @@
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { closeLoginModal } from '@/redux/modalSlice';
+import { closeLoginModal, openSignupModal } from '@/redux/modalSlice';
 import { Modal, TextField, InputAdornment, IconButton } from '@mui/material';
 import Image from 'next/image';
 import React, { useState, ChangeEvent, FormEvent } from 'react';
@@ -65,6 +65,11 @@ export default function LoginModal() {
       setError(error.message);
     }
   };
+
+  function handleToggleModals() {
+    dispatch(closeLoginModal());
+    dispatch(openSignupModal())
+  }
 
   return (
     <Modal open={isOpen} onClose={() => dispatch(closeLoginModal())}>
@@ -160,6 +165,12 @@ export default function LoginModal() {
               Login
             </button>
           </form>
+          <button
+            onClick={handleToggleModals}
+            className="absolute bottom-0 w-full p-3 pt-4 text-blue-500 hover:bg-gray-300 active:bg-blue-400 active:text-white-500"
+          >
+            Don&apos;t have an account?
+          </button>
         </div>
       </div>
     </Modal>

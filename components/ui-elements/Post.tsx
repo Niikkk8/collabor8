@@ -58,10 +58,10 @@ export default function Post({ post }: { post: PostType }) {
           </div>
           <Image src="/assets/svgs/post-verticalellipsis.svg" alt="Post options" width={12} height={12} />
         </div>
-        <p className='py-4 border-b border-dark-700 text-sm'>{post.postContent}</p>
+        <p className='text-sm mt-2'>{post.postContent}</p>
         {post.postImageSrc && (
-          <div className='relative'>
-            <Image src={post.postImageSrc} layout="responsive" width={0} height={0} alt="" className='max-w-full h-auto object-contain' />
+          <div className='py-4 border-b border-dark-700'>
+            <img src={post.postImageSrc} alt="" className='w-auto h-auto object-contain' />
           </div>
         )}
 

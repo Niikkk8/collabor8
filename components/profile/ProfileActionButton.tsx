@@ -6,11 +6,11 @@ import { setUser } from '@/redux/userSlice';
 import { User } from '@/types';
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import React from 'react';
-import { useRouter } from 'next/navigation';  // Import useRouter
+import { useRouter } from 'next/navigation';
 
 export default function ProfileActionButton({ id }: { id: string }) {
   const dispatch = useAppDispatch();
-  const router = useRouter();  // Initialize router
+  const router = useRouter();
   const user: User = useAppSelector((state) => state.user);
   const isLoggedInUser: boolean = user.userUID === id;
   const isFollowing: boolean = user.userFollowing.includes(id);

@@ -89,14 +89,14 @@ export default function Page({ params }: { params: { id: string } }) {
             </div>
             <div className='w-1/4 overflow-scroll no-scrollbar'>
                 <Image src={community.communityBannerSrc} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover' />
-                <div className='mt-[-76px] p-4 border-b border-dark-700'>
+                <div className='mt-[-68px] p-4 border-b border-dark-700'>
                     <div className='flex justify-between items-center'>
                         <Image src={community.communityProfileSrc} width={120} height={120} alt='' className='object-cover rounded-full border-4 border-dark-900' />
-                        <Image src={'/assets/svgs/community-ellipsis.svg'} width={28} height={28} alt='' className='mt-8' />
+                        {/* <Image src={'/assets/svgs/community-ellipsis.svg'} width={28} height={28} alt='' className='mt-8' /> */}
                     </div>
                     <div className='mt-4 flex justify-between items-center'>
                         <h1 className='text-lg font-semibold w-1/2 truncate'>{community.communityName}</h1>
-                        <CommunityActionButton communityId={community.communityUID} communityAdmin={community.communityAdmin} />
+                        <CommunityActionButton communityId={params.id} communityAdmin={community.communityAdmin} />
                     </div>
                     <div className='bg-dark-800 mt-4 py-2 px-4 rounded'>
                         <p className='text-sm'>{community.communityMembers.length} members</p>

@@ -26,18 +26,6 @@ interface Event {
   location: string;
 }
 
-async function fetchNews() {
-  const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
-  const response = await fetch(
-    `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&country=in&language=en&category=technology`
-  );
-  const data = await response.json();
-
-  return Array.isArray(data.results)
-    ? data.results.filter((article: any) => article.image_url && article.source_icon).slice(0, 2)
-    : [];
-}
-
 export default function Home() {
   const [posts, setPosts] = useState<PostType[]>([]);
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
@@ -60,6 +48,38 @@ export default function Home() {
   ];
 
   useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
+        const response = await fetch(
+          `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&country=in&language=en&category=technology`
+        );
+        const data = await response.json();
+
+        const filteredArticles = Array.isArray(data.results)
+          ? data.results
+            .filter((article: any) => article.image_url && article.source_icon)
+            .slice(0, 2)
+          : [];
+
+        setNewsArticles(filteredArticles);
+      } catch (error) {
+        console.error('Error fetching news:', error);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
+  function chunk<T>(array: T[], size: number): T[][] {
+    const chunked: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunked.push(array.slice(i, i + size));
+    }
+    return chunked;
+  }
+
+  useEffect(() => {
     const fetchPosts = async () => {
       try {
         if (!currentUser?.userUID) {
@@ -69,13 +89,11 @@ export default function Home() {
 
         const postsRef: CollectionReference<DocumentData> = collection(db, 'posts');
         const POSTS_PER_QUERY = 20;
+        let allPosts: PostType[] = [];
 
-        // Add followed users' posts if any
         if (currentUser.userFollowing?.length > 0) {
-          // Handle followed users in chunks of 10
           const followingChunks = chunk(currentUser.userFollowing, 10);
           for (const followingChunk of followingChunks) {
-            // Create separate queries for each chunk
             const q = query(
               postsRef,
               where('postAuthorId', 'in', followingChunk),
@@ -83,10 +101,9 @@ export default function Home() {
               firestoreLimit(POSTS_PER_QUERY)
             );
             const chunkSnapshot = await getDocs(q);
-            const chunkPosts: PostType[] = [];
             chunkSnapshot.forEach((doc) => {
               const postData = doc.data();
-              chunkPosts.push({
+              allPosts.push({
                 postUID: doc.id,
                 postContent: postData.postContent,
                 postImageSrc: postData.postImageSrc,
@@ -98,13 +115,10 @@ export default function Home() {
                 postComments: postData.postComments || [],
               });
             });
-            setPosts(prev => [...prev, ...chunkPosts]);
           }
         }
 
-        // Add community posts if any
         if (currentUser.userCommunities?.length > 0) {
-          // Handle communities in chunks of 10
           const communityChunks = chunk(currentUser.userCommunities, 10);
           for (const communityChunk of communityChunks) {
             const q = query(
@@ -114,10 +128,9 @@ export default function Home() {
               firestoreLimit(POSTS_PER_QUERY)
             );
             const chunkSnapshot = await getDocs(q);
-            const chunkPosts: PostType[] = [];
             chunkSnapshot.forEach((doc) => {
               const postData = doc.data();
-              chunkPosts.push({
+              allPosts.push({
                 postUID: doc.id,
                 postContent: postData.postContent,
                 postImageSrc: postData.postImageSrc,
@@ -129,11 +142,9 @@ export default function Home() {
                 postComments: postData.postComments || [],
               });
             });
-            setPosts(prev => [...prev, ...chunkPosts]);
           }
         }
 
-        // Get own posts
         const ownPostsQuery = query(
           postsRef,
           where('postAuthorId', '==', currentUser.userUID),
@@ -142,10 +153,9 @@ export default function Home() {
         );
 
         const ownPostsSnapshot = await getDocs(ownPostsQuery);
-        const ownPosts: PostType[] = [];
         ownPostsSnapshot.forEach((doc) => {
           const postData = doc.data();
-          ownPosts.push({
+          allPosts.push({
             postUID: doc.id,
             postContent: postData.postContent,
             postImageSrc: postData.postImageSrc,
@@ -157,20 +167,15 @@ export default function Home() {
             postComments: postData.postComments || [],
           });
         });
-        setPosts(prev => [...prev, ...ownPosts]);
 
-        // Remove duplicates and sort all posts by date
-        setPosts(prev => {
-          // Remove duplicates based on postUID
-          const uniquePosts = Array.from(
-            new Map(prev.map(post => [post.postUID, post])).values()
-          );
-          // Sort by date
-          return uniquePosts.sort(
-            (a, b) => b.postCreatedAt.getTime() - a.postCreatedAt.getTime()
-          );
-        });
+        const uniquePosts = Array.from(
+          new Map(allPosts.map(post => [post.postUID, post])).values()
+        );
+        const sortedPosts = uniquePosts.sort(
+          (a, b) => b.postCreatedAt.getTime() - a.postCreatedAt.getTime()
+        );
 
+        setPosts(sortedPosts);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -178,16 +183,6 @@ export default function Home() {
       }
     };
 
-    // Helper function to split arrays into chunks
-    function chunk<T>(array: T[], size: number): T[][] {
-      const chunked: T[][] = [];
-      for (let i = 0; i < array.length; i += size) {
-        chunked.push(array.slice(i, i + size));
-      }
-      return chunked;
-    }
-
-    // Reset posts when user changes
     setPosts([]);
     setIsLoading(true);
     fetchPosts();

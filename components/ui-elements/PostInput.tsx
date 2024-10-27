@@ -228,10 +228,10 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
             </div>
           )}
 
-          <div className='flex items-center mt-4 px-2'>
+          {/* <div className='flex items-center mt-4 px-2'>
             <Image src="/assets/svgs/input-globe.svg" alt="" width={20} height={20} />
             <p className='text-sm mx-1'>Everyone can reply</p>
-          </div>
+          </div> */}
         </div>
         <div className='flex items-center justify-between p-2 mt-1'>
           <div className='flex items-center'>
