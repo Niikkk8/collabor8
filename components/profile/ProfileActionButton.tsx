@@ -59,10 +59,14 @@ export default function ProfileActionButton({ id }: { id: string }) {
     }
   }
 
+  async function handleEditProfile() {
+
+  }
+
   return (
     <div>
       {isLoggedInUser ? (
-        <button className="mt-24 mr-4 border border-white-800 h-fit text-sm py-2 px-6 rounded-lg">
+        <button className="mt-24 mr-4 border border-dark-500 hover:bg-dark-500 transition-colors h-fit text-sm py-2 px-6 rounded-lg" onClick={handleEditProfile}>
           Edit Profile
         </button>
       ) : (

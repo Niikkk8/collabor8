@@ -3,19 +3,25 @@ import Image from 'next/image';
 import Link from 'next/link';
 import debounce from 'lodash/debounce';
 import { collection, query, getDocs } from "firebase/firestore";
-import { db } from "@/firebase";
-import { User, Community } from "@/types";  // Assuming you have a Community type
-import { useAppSelector } from "@/redux/hooks";
+import { auth, db } from "@/firebase";
+import { User, Community } from "@/types";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { signOut } from "firebase/auth";
+import { signOutUser } from "@/redux/userSlice";
+import { AppDispatch } from "@/redux/store";
 
 export default function SearchBar() {
   const user: User = useAppSelector((state) => state.user);
+  const dispatch = useAppDispatch()
   const [searchTerm, setSearchTerm] = useState('');
   const [userResults, setUserResults] = useState<User[]>([]);
   const [communityResults, setCommunityResults] = useState<Community[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   const debouncedSearch = useCallback(
     debounce(async (term: string) => {
@@ -100,6 +106,9 @@ export default function SearchBar() {
         setSearchTerm('');
         setError(null);
       }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -107,6 +116,21 @@ export default function SearchBar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  async function handleSignOut() {
+    try {
+      await signOut(auth);
+      dispatch(signOutUser());
+      console.log('User signed out successfully');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error('An unexpected error occurred during sign out');
+      }
+    }
+  };
 
   return (
     <div className='px-6 py-4 flex justify-between w-full border-b border-dark-700'>
@@ -224,10 +248,13 @@ export default function SearchBar() {
             className='w-[22px] h-[22px]'
           />
         </div>
-        <div>
-          <div className='flex items-center ml-4'>
+        <div ref={profileDropdownRef} className="relative">
+          <div
+            className='flex items-center ml-4 cursor-pointer'
+            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+          >
             <Image
-              src="/assets/placeholder-images/profile-picture.jpg"
+              src={user.userProfilePictureSrc || '/assets/placeholder-images/profile-picture.jpg'}
               alt="User Profile Picture"
               width={48}
               height={48}
@@ -239,9 +266,18 @@ export default function SearchBar() {
               alt="Dropdown Icon"
               width={18}
               height={18}
-              className='w-[18px] h-[18px]'
+              className={`w-[18px] h-[18px] transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''
+                }`}
             />
           </div>
+
+          {isProfileDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 rounded-lg bg-dark-900 shadow-lg py-1 z-10">
+              <div className="px-4 py-2 text-sm text-red-500 hover:bg-dark-800 cursor-pointer flex items-center" onClick={handleSignOut}>
+                Sign Out
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

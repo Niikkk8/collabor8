@@ -74,7 +74,7 @@ export default function CommunityActionButton({ communityId, communityAdmin }: {
                 userCommunities: user.userCommunities.filter(community => community !== communityId),
             }));
 
-            router.refresh();
+            router.push('/communities');
         } catch (error) {
             console.error("Error Deleting Community:", error);
         }

@@ -1,12 +1,17 @@
 'use client';
 
 import CommunitiesCard from '@/components/communities/CommunitiesCard';
-import { db } from '@/firebase';
+import { db, storage } from '@/firebase';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setUser } from '@/redux/userSlice';
 import { Community, User } from '@/types';
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useEffect, useState } from 'react';
+
+const generateSimpleId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
 
 export default function CommunitiesPage() {
   const dispatch = useAppDispatch()
@@ -18,6 +23,10 @@ export default function CommunitiesPage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string>('/assets/placeholder-images/developer.jpg');
+  const [bannerPreview, setBannerPreview] = useState<string>('/assets/placeholder-images/community-banner.jpg');
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [formData, setFormData] = useState<Community>({
     communityUID: '',
     communityName: '',
@@ -112,23 +121,83 @@ export default function CommunitiesPage() {
   const visibleCommunities = displayAllCommunities
     ? joinedCommunities
     : joinedCommunities.slice(0, 3);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const uploadImage = async (file: File, type: 'profile' | 'banner'): Promise<string> => {
+    try {
+      const imageFileName = `${generateSimpleId()}-${file.name}`;
+      const imageRef = ref(storage, `communities/${type}/${imageFileName}`);
+      const uploadResult = await uploadBytes(imageRef, file);
+      return await getDownloadURL(uploadResult.ref);
+    } catch (err) {
+      console.error(`Error uploading ${type} image:`, err);
+      throw new Error(`Failed to upload ${type} image`);
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>, imageType: 'profile' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!validTypes.includes(file.type)) {
+          throw new Error('Please select a valid image file (JPEG, PNG, or GIF)');
+        }
+
+        if (file.size > maxSize) {
+          throw new Error('File size should be less than 5MB');
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const imageUrl = reader.result as string;
+          if (imageType === 'profile') {
+            setProfilePreview(imageUrl);
+            setProfileFile(file);
+          } else {
+            setBannerPreview(imageUrl);
+            setBannerFile(file);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error selecting image');
+        e.target.value = '';
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
+      let profileUrl = formData.communityProfileSrc;
+      let bannerUrl = formData.communityBannerSrc;
+
+      if (profileFile) {
+        profileUrl = await uploadImage(profileFile, 'profile');
+      }
+
+      if (bannerFile) {
+        bannerUrl = await uploadImage(bannerFile, 'banner');
+      }
+
       const docRef = await addDoc(collection(db, 'communities'), {
         communityName: formData.communityName,
         communityDescription: formData.communityDescription,
         communityCreatedAt: new Date(),
-        communityMembers: formData.communityMembers,
-        communityAdmin: formData.communityAdmin,
-        communityProfileSrc: formData.communityProfileSrc,
-        communityBannerSrc: formData.communityBannerSrc
+        communityMembers: [user.userUID],
+        communityAdmin: user.userUID,
+        communityProfileSrc: profileUrl,
+        communityBannerSrc: bannerUrl
       });
 
       const newCommunityID = docRef.id;
@@ -137,17 +206,16 @@ export default function CommunitiesPage() {
         userCommunities: arrayUnion(newCommunityID),
       });
 
-      await updateDoc(doc(db, 'communities', newCommunityID), {
-        communityMembers: arrayUnion(user.userUID)
-      })
-
       dispatch(setUser({
         ...user,
-        userCommunities: [...user.userCommunities, newCommunityID],
+        userCommunities: [...(user.userCommunities || []), newCommunityID],
       }));
 
       setIsModalOpen(false);
-
+      setProfilePreview('/assets/placeholder-images/developer.jpg');
+      setBannerPreview('/assets/placeholder-images/community-banner.jpg');
+      setProfileFile(null);
+      setBannerFile(null);
       setFormData({
         communityUID: '',
         communityName: '',
@@ -155,14 +223,18 @@ export default function CommunitiesPage() {
         communityCreatedAt: new Date(),
         communityMembers: [],
         communityAdmin: user.userUID,
-        communityProfileSrc: '',
-        communityBannerSrc: ''
+        communityProfileSrc: '/assets/placeholder-images/developer.jpg',
+        communityBannerSrc: '/assets/placeholder-images/community-banner.jpg'
       });
 
     } catch (error) {
-      console.error('Error adding document: ', error);
+      console.error('Error creating community: ', error);
+      setError(error instanceof Error ? error.message : 'Failed to create community');
+    } finally {
+      setLoading(false);
     }
   };
+
 
 
   return (
@@ -233,7 +305,7 @@ export default function CommunitiesPage() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-md bg-dark-800 rounded-lg shadow-xl">
+          <div className="relative w-full max-w-xl bg-dark-800 rounded-lg shadow-xl">
             <button
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-dark-600 transition-colors"
@@ -267,10 +339,51 @@ export default function CommunitiesPage() {
                     name="communityDescription"
                     value={formData.communityDescription}
                     onChange={handleInputChange}
-                    required rows={4}
+                    required
+                    rows={4}
                     className="w-full px-3 py-2 bg-dark-600 border border-dark-500 rounded-md text-white-500 placeholder-dark-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Describe your community..."
                   />
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white-300 mb-2">
+                      Community Profile Picture
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={profilePreview}
+                        alt="Profile preview"
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'profile')}
+                        className="text-sm text-white-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white-300 mb-2">
+                      Community Banner
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={bannerPreview}
+                        alt="Banner preview"
+                        className="w-32 h-16 rounded object-cover"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageChange(e, 'banner')}
+                        className="text-sm text-white-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-4">

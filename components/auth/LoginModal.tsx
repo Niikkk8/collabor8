@@ -4,8 +4,9 @@ import { Modal, TextField, InputAdornment, IconButton } from '@mui/material';
 import Image from 'next/image';
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, provider } from '@/firebase'; // Import auth and Google provider from your firebase config
-import { useRouter } from 'next/router';
+import { auth, provider } from '@/firebase';
+import { handleGoogleAuth } from './GoogleAuthHandler';
+import { setUser } from '@/redux/userSlice';
 
 interface LoginValues {
   email: string;
@@ -23,7 +24,6 @@ export default function LoginModal() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle email/password login
   const handleLoginChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoginValues((prevValues) => ({
@@ -36,31 +36,31 @@ export default function LoginModal() {
     setShowPassword(!showPassword);
   };
 
-  // Handle form submission for email/password login
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
+    setError(null);
 
     try {
-      // Firebase login
       const userCredential = await signInWithEmailAndPassword(
         auth,
         loginValues.email,
         loginValues.password
       );
       console.log('Login successful:', userCredential);
-      dispatch(closeLoginModal()); // Close modal upon successful login
+      dispatch(closeLoginModal());
     } catch (error: any) {
       setError(error.message);
     }
   };
 
-  // Handle Google login
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      console.log('Google login successful:', result);
-      dispatch(closeLoginModal()); // Close modal upon successful Google login
+      const userData = await handleGoogleAuth(false);
+      dispatch(setUser({
+        ...userData,
+        userUID: auth.currentUser!.uid,
+      }));
+      dispatch(closeLoginModal());
     } catch (error: any) {
       setError(error.message);
     }
@@ -89,7 +89,6 @@ export default function LoginModal() {
           <form className="flex flex-col w-full text-dark-800 mb-6" onSubmit={handleSubmit}>
             <h1 className='text-center font-bold text-lg mb-2'>Login to Collabor8</h1>
 
-            {/* Google Login */}
             <button
               type="button"
               className='my-2 bg-blue-500 py-2 rounded text-white-500 flex items-center justify-center'
@@ -105,14 +104,12 @@ export default function LoginModal() {
               Login with Google
             </button>
 
-            {/* Divider */}
             <div className="flex items-center gap-6 mb-4">
               <span className="h-[1px] bg-gray-400 w-[80%]" />
               <p className="text-gray-500">or</p>
               <span className="h-[1px] bg-gray-400 w-[80%]" />
             </div>
 
-            {/* Email/Password Login */}
             <div className="grid grid-cols-1 gap-4">
               <div className="col-span-1">
                 <TextField
@@ -156,7 +153,6 @@ export default function LoginModal() {
               </div>
             </div>
 
-            {/* Error message */}
             {error && (
               <p className="text-red-500 text-center mt-2">{error}</p>
             )}

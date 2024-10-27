@@ -8,7 +8,7 @@ export default function ProfileInfo({ user }: { user: User }) {
         <div className='bg-dark-800 p-4 mt-2 rounded-lg'>
             <div className='flex items-center'>
                 <Image
-                    src={user.userProfilePictureSrc}
+                    src={user.userProfilePictureSrc || '/assets/placeholder-images/profile-picture.jpg'}
                     alt=''
                     width={56}
                     height={56}

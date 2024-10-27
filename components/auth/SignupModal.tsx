@@ -2,11 +2,13 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { closeSignupModal, openLoginModal } from '@/redux/modalSlice';
 import { Modal, TextField, InputAdornment, IconButton } from "@mui/material";
 import Image from 'next/image';
-import React, { useState, ChangeEvent } from 'react';
-import { auth, db, provider } from '@/firebase';
+import React, { useState, ChangeEvent, useRef } from 'react';
+import { auth, db, provider, storage } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { setUser } from '@/redux/userSlice';
+import { handleGoogleAuth } from './GoogleAuthHandler';
 
 interface SignupValues {
   firstName: string;
@@ -15,8 +17,9 @@ interface SignupValues {
   email: string;
   password: string;
   confirmPassword: string;
+  profilePicture: File | null;
+  profileBanner: File | null;
 }
-
 export default function SignupModal() {
   const isOpen = useAppSelector((state) => state.modals.signupModal);
   const dispatch = useAppDispatch();
@@ -28,10 +31,18 @@ export default function SignupModal() {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    profilePicture: null,
+    profileBanner: null
   });
   const [error, setError] = useState<string>('');
   const [usernameError, setUsernameError] = useState<string>('');
+  const [imageError, setImageError] = useState<string>('');
+  const [profilePreview, setProfilePreview] = useState<string>('');
+  const [bannerPreview, setBannerPreview] = useState<string>('');
+
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const handleSignupChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -49,6 +60,102 @@ export default function SignupModal() {
         [name]: value
       }));
     }
+  };
+
+  const validateImage = (file: File, type: 'profile' | 'banner'): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = document.createElement('img');
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const aspectRatio = img.width / img.height;
+
+        if (type === 'profile') {
+          if (aspectRatio < 0.95 || aspectRatio > 1.05) {
+            setImageError('Profile picture must be square (1:1 ratio)');
+            resolve(false);
+          } else {
+            setImageError('');
+            resolve(true);
+          }
+        } else {
+          if (aspectRatio < 1.6 || aspectRatio > 2.5) {
+            setImageError('Banner must be rectangular (16:9 ratio recommended)');
+            resolve(false);
+          } else {
+            setImageError('');
+            resolve(true);
+          }
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        setImageError('Invalid image file');
+        resolve(false);
+      };
+
+      img.src = objectUrl;
+    });
+  };
+
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>, type: 'profile' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageError('');
+    if (type === 'profile') {
+      setProfilePreview('');
+    } else {
+      setBannerPreview('');
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Image size should be less than 5MB');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setImageError('Please upload an image file');
+      return;
+    }
+
+    try {
+      const isValid = await validateImage(file, type);
+      if (!isValid) return;
+
+      setSignupValues(prev => ({
+        ...prev,
+        [type === 'profile' ? 'profilePicture' : 'profileBanner']: file
+      }));
+
+      const previewUrl = URL.createObjectURL(file);
+      if (type === 'profile') {
+        setProfilePreview(previewUrl);
+      } else {
+        setBannerPreview(previewUrl);
+      }
+
+      return () => {
+        URL.revokeObjectURL(previewUrl);
+      };
+    } catch (error) {
+      setImageError('Error processing image. Please try another file.');
+    }
+  };
+
+  const ImagePreview: React.FC<{ src: string; alt: string; type: 'profile' | 'banner' }> = ({ src, alt, type }) => {
+    return (
+      <div className={`relative ${type === 'profile' ? 'w-[100px] h-[100px]' : 'w-[200px] h-[80px]'}`}>
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className={`object-cover ${type === 'profile' ? 'rounded-full' : 'rounded'}`}
+        />
+      </div>
+    );
   };
 
   const validateUsername = (username: string) => {
@@ -76,6 +183,12 @@ export default function SignupModal() {
     return !usernameDoc.exists();
   }
 
+  async function uploadImage(file: File, path: string): Promise<string> {
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return getDownloadURL(storageRef);
+  }
+
   async function handleSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
@@ -91,27 +204,46 @@ export default function SignupModal() {
     }
 
     try {
-      // Check username uniqueness
       const isUsernameUnique = await checkUsernameUniqueness(signupValues.username);
       if (!isUsernameUnique) {
         setError("Username is already taken");
         return;
       }
 
-      const userCredential = await createUserWithEmailAndPassword(auth, signupValues.email, signupValues.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        signupValues.email,
+        signupValues.password
+      );
       const user = userCredential.user;
 
       const defaultUserProfilePicture = '/assets/placeholder-images/profile-picture.jpg';
       const defaultUserBanner = '/assets/placeholder-images/profile-banner.jpeg';
 
-      // Store user data in Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      let profilePictureUrl = defaultUserProfilePicture;
+      let bannerUrl = defaultUserBanner;
+
+      if (signupValues.profilePicture) {
+        profilePictureUrl = await uploadImage(
+          signupValues.profilePicture,
+          `users/${user.uid}/profile-picture.${signupValues.profilePicture.name.split('.').pop()}`
+        );
+      }
+
+      if (signupValues.profileBanner) {
+        bannerUrl = await uploadImage(
+          signupValues.profileBanner,
+          `users/${user.uid}/profile-banner.${signupValues.profileBanner.name.split('.').pop()}`
+        );
+      }
+
+      const userData = {
         userFirstName: signupValues.firstName,
         userLastName: signupValues.lastName,
         userID: signupValues.username.toLowerCase(),
         userEmail: signupValues.email,
-        userProfilePictureSrc: defaultUserProfilePicture,
-        userProfileBannerSrc: defaultUserBanner,
+        userProfilePictureSrc: profilePictureUrl,
+        userProfileBannerSrc: bannerUrl,
         userBio: "",
         userJoiningDate: new Date(),
         userFollowers: [],
@@ -119,108 +251,36 @@ export default function SignupModal() {
         userPosts: [],
         userCommunities: [],
         userMeetups: [],
-      });
+      };
 
-      // Dispatch the user information to Redux store
-      dispatch(setUser({
-        userFirstName: signupValues.firstName,
-        userLastName: signupValues.lastName,
-        userID: signupValues.username.toLowerCase(),
-        userEmail: signupValues.email,
-        userUID: user.uid,
-        userProfilePictureSrc: defaultUserProfilePicture,
-        userProfileBannerSrc: defaultUserBanner,
-        userBio: "",
-        userJoiningDate: new Date(),
-        userFollowers: [],
-        userFollowing: [],
-        userPosts: [],
-        userCommunities: [],
-        userMeetups: []
-      }));
-
-      // Store username separately for uniqueness check
+      await setDoc(doc(db, "users", user.uid), userData);
       await setDoc(doc(db, "usernames", signupValues.username.toLowerCase()), {
         uid: user.uid
       });
 
-      dispatch(closeSignupModal());
-    } catch (error) {
-      setError((error as Error).message);
-    }
-  }
-
-  async function handleGoogleSignup() {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      if (!user.email) {
-        throw new Error("No email associated with the Google account");
-      }
-
-      // Extract username from email
-      let username = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_\.]/g, '');
-      let isUnique = false;
-      let counter = 0;
-
-      while (!isUnique) {
-        const testUsername = counter === 0 ? username : `${username}${counter}`;
-        isUnique = await checkUsernameUniqueness(testUsername);
-        if (isUnique) {
-          username = testUsername;
-        } else {
-          counter++;
-        }
-      }
-
-      const defaultUserProfilePicture = '/assets/placeholder-images/profile-picture.jpg';
-      const defaultUserBanner = '/assets/placeholder-images/profile-banner.jpeg';
-
-      await setDoc(doc(db, "users", user.uid), {
-        userFirstName: user.displayName?.split(' ')[0] || '',
-        userLastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        userID: username,
-        userEmail: user.email,
-        userProfilePictureSrc: user.photoURL || defaultUserProfilePicture,
-        userProfileBannerSrc: defaultUserBanner,
-        userBio: "",
-        userJoiningDate: new Date(),
-        userFollowers: [],
-        userFollowing: [],
-        userPosts: [],
-        userCommunities: [],
-        userMeetups: [],
-      });
-
-      await setDoc(doc(db, "usernames", username), {
-        uid: user.uid
-      });
-
-      // Dispatch user information to Redux store
       dispatch(setUser({
-        userFirstName: user.displayName?.split(' ')[0] || '',
-        userLastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        userID: username,
-        userEmail: user.email || '',
+        ...userData,
         userUID: user.uid,
-        userProfilePictureSrc: user.photoURL || defaultUserProfilePicture,
-        userProfileBannerSrc: defaultUserBanner,
-        userBio: "",
-        userJoiningDate: new Date(),
-        userFollowers: [],
-        userFollowing: [],
-        userPosts: [],
-        userCommunities: [],
-        userMeetups: []
       }));
 
-      console.log("User signed up with Google successfully");
       dispatch(closeSignupModal());
     } catch (error) {
       setError((error as Error).message);
     }
   }
+
+  const handleGoogleSignup = async () => {
+    try {
+      const userData = await handleGoogleAuth(true);
+      dispatch(setUser({
+        ...userData,
+        userUID: auth.currentUser!.uid,
+      }));
+      dispatch(closeSignupModal());
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
 
   function handleToggleModals() {
     dispatch(closeSignupModal());
@@ -352,7 +412,63 @@ export default function SignupModal() {
                   }}
                 />
               </div>
+              <div className="col-span-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={profileInputRef}
+                  onChange={(e) => handleImageChange(e, 'profile')}
+                />
+                <div className="flex flex-col items-center gap-2">
+                  {profilePreview && (
+                    <ImagePreview
+                      src={profilePreview}
+                      alt="Profile Preview"
+                      type="profile"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => profileInputRef.current?.click()}
+                    className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+                  >
+                    Upload Profile Picture (Optional)
+                  </button>
+                </div>
+              </div>
+              <div className="col-span-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={bannerInputRef}
+                  onChange={(e) => handleImageChange(e, 'banner')}
+                />
+                <div className="flex flex-col items-center gap-2">
+                  {bannerPreview && (
+                    <ImagePreview
+                      src={bannerPreview}
+                      alt="Banner Preview"
+                      type="banner"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => bannerInputRef.current?.click()}
+                    className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+                  >
+                    Upload Banner (Optional)
+                  </button>
+                </div>
+              </div>
             </div>
+
+            {imageError && (
+              <div className="col-span-2">
+                <p className="text-red-500">{imageError}</p>
+              </div>
+            )}
             {error && <p className="text-red-500 mt-2">{error}</p>}
             <button type="submit" className="mt-4 bg-blue-500 py-2 rounded text-white-500">
               Sign Up
@@ -367,5 +483,5 @@ export default function SignupModal() {
         </div>
       </div>
     </Modal>
-  )
+  );
 }
