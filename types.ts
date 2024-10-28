@@ -48,3 +48,14 @@ export type Comment = {
     commentThreads: Comment[],
     commentLikes: string[],
 }
+
+export type Event = {
+    eventUID: string,
+    eventTitle: string,
+    eventDescription: string,
+    eventDate: Date,
+    eventLocation: string,
+    eventOrganizerId: string,
+    eventMembers: string[],
+    eventImageSrc: string,
+}

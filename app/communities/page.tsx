@@ -7,6 +7,7 @@ import { setUser } from '@/redux/userSlice';
 import { Community, User } from '@/types';
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 const generateSimpleId = () => {
@@ -347,6 +348,7 @@ export default function CommunitiesPage() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Community Profile Picture */}
                   <div>
                     <label className="block text-sm font-medium text-white-300 mb-2">
                       Community Profile Picture
@@ -359,13 +361,37 @@ export default function CommunitiesPage() {
                       />
                       <input
                         type="file"
+                        id="profileImage"
                         accept="image/*"
                         onChange={(e) => handleImageChange(e, 'profile')}
-                        className="text-sm text-white-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600"
+                        className="hidden"
                       />
+                      <label
+                        htmlFor="profileImage"
+                        className="inline-flex items-center cursor-pointer"
+                      >
+                        <div className="flex items-center bg-dark-700 px-4 py-2 rounded-lg hover:bg-dark-600 border border-dark-500">
+                          <Image
+                            src="/assets/svgs/input-camera.svg"
+                            alt="Upload Profile Picture"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">
+                            {profilePreview ? 'Change Image' : 'Upload Image'}
+                          </span>
+                        </div>
+                      </label>
                     </div>
+                    {profilePreview && (
+                      <p className="text-sm text-green-500 mt-2">
+                        ✓ Image selected
+                      </p>
+                    )}
                   </div>
 
+                  {/* Community Banner */}
                   <div>
                     <label className="block text-sm font-medium text-white-300 mb-2">
                       Community Banner
@@ -378,13 +404,37 @@ export default function CommunitiesPage() {
                       />
                       <input
                         type="file"
+                        id="bannerImage"
                         accept="image/*"
                         onChange={(e) => handleImageChange(e, 'banner')}
-                        className="text-sm text-white-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-500 file:text-white hover:file:bg-brand-600"
+                        className="hidden"
                       />
+                      <label
+                        htmlFor="bannerImage"
+                        className="inline-flex items-center cursor-pointer"
+                      >
+                        <div className="flex items-center bg-dark-700 px-4 py-2 rounded-lg hover:bg-dark-600 border border-dark-500">
+                          <Image
+                            src="/assets/svgs/input-camera.svg"
+                            alt="Upload Banner"
+                            width={20}
+                            height={20}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">
+                            {bannerPreview ? 'Change Image' : 'Upload Image'}
+                          </span>
+                        </div>
+                      </label>
                     </div>
+                    {bannerPreview && (
+                      <p className="text-sm text-green-500 mt-2">
+                        ✓ Image selected
+                      </p>
+                    )}
                   </div>
                 </div>
+
 
                 <div className="pt-4">
                   <button

@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { User, Post, Community } from '@/types';
+import { User, Post } from '@/types';
 import { useAppSelector } from '@/redux/hooks';
 import { db, storage } from '@/firebase';
 import {
@@ -16,6 +16,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, StorageReference } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
+import { EventInput } from '@/components/ui-elements/EventInput';
 
 const generateSimpleId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -34,6 +35,7 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
 
   const validateFirebaseConfig = () => {
     if (!db) throw new Error('Firestore instance is not initialized');
@@ -174,10 +176,9 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
         fileInputRef.current.value = '';
       }
 
-      router.refresh();
-
       console.log('Post created successfully');
-
+      
+      router.refresh();
     } catch (err) {
       console.error('Detailed error:', err);
       setError(err instanceof Error ? err.message : 'Failed to create post. Please try again.');
@@ -246,7 +247,7 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
               />
               <label
                 htmlFor="image-upload"
-                className='flex items-center cursor-pointer'
+                className='flex items-center cursor-pointer hover:opacity-80 transition-opacity'
               >
                 <Image src="/assets/svgs/input-camera.svg" alt="" width={20} height={20} className='mr-2' />
                 <p className='text-sm'>
@@ -254,13 +255,19 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
                 </p>
               </label>
             </div>
-            <div className='flex items-center'>
-              <Image src="/assets/svgs/input-events.svg" alt="" width={20} height={20} className='mr-2' />
-              <p className='text-sm'>Events</p>
-            </div>
+            {
+              !communityId &&
+              <div
+                className='flex items-center cursor-pointer hover:opacity-80 transition-opacity'
+                onClick={() => setIsEventModalOpen(true)}
+              >
+                <Image src="/assets/svgs/input-events.svg" alt="" width={20} height={20} className='mr-2' />
+                <p className='text-sm'>Events</p>
+              </div>
+            }
           </div>
           <button
-            className={`py-2 px-6 rounded-lg ${isSubmitting
+            className={`py-2 px-6 rounded-lg transition-colors ${isSubmitting
               ? 'bg-brand-300 cursor-not-allowed'
               : 'bg-brand-500 hover:bg-brand-600'
               }`}
@@ -271,6 +278,12 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
           </button>
         </div>
       </div>
+
+      <EventInput
+        isOpen={isEventModalOpen}
+        onClose={() => setIsEventModalOpen(false)}
+        userId={user?.userUID || ''}
+      />
     </div>
   );
 }

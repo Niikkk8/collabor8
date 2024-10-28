@@ -420,7 +420,7 @@ export default function SignupModal() {
                   ref={profileInputRef}
                   onChange={(e) => handleImageChange(e, 'profile')}
                 />
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
                   {profilePreview && (
                     <ImagePreview
                       src={profilePreview}
@@ -445,7 +445,7 @@ export default function SignupModal() {
                   ref={bannerInputRef}
                   onChange={(e) => handleImageChange(e, 'banner')}
                 />
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-2">
                   {bannerPreview && (
                     <ImagePreview
                       src={bannerPreview}
