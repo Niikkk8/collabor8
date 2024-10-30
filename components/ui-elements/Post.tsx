@@ -5,10 +5,17 @@ import { Community, Post as PostType, User } from '@/types';
 import getUserData from '../helpers/fetchUserData';
 import Moment from 'react-moment';
 import getCommunitiesData from '../helpers/fetchCommunityData';
+import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/firebase';
+import { useAppSelector } from '@/redux/hooks';
 
 export default function Post({ post }: { post: PostType }) {
   const [user, setUser] = useState<User | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
+  const [postComponent, setPost] = useState<PostType>(post);
+  const [isHovered, setIsHovered] = useState<string | null>(null);
+  const currentUser: User = useAppSelector((state) => state.user);
+  const hasLiked: boolean = postComponent.postLikes.includes(currentUser.userUID);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -16,77 +23,201 @@ export default function Post({ post }: { post: PostType }) {
       setUser(fetchedUser);
     };
 
-    const fetchCommuniy = async () => {
-      const fetchedCommunity = await getCommunitiesData(post.postCommunityId!)
-      setCommunity(fetchedCommunity)
-    }
+    const fetchCommunity = async () => {
+      if (post.postCommunityId) {
+        const fetchedCommunity = await getCommunitiesData(post.postCommunityId);
+        setCommunity(fetchedCommunity);
+      }
+    };
 
-    if (post.postCommunityId) {
-      fetchCommuniy()
-    }
     fetchUser();
-  }, [post.postAuthorId]);
+    fetchCommunity();
+  }, [post.postAuthorId, post.postCommunityId]);
+
+  async function handleLike(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!postComponent || !currentUser) return;
+
+    try {
+      await updateDoc(doc(db, 'posts', String(postComponent.postUID)), {
+        postLikes: arrayUnion(currentUser.userUID),
+      });
+
+      setPost((prevPost) =>
+        prevPost ? { ...prevPost, postLikes: [...prevPost.postLikes, currentUser.userUID] } : prevPost
+      );
+    } catch (error) {
+      console.error("Error Liking Post:", error);
+    }
+  }
+
+  async function removeLike(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!postComponent || !currentUser) return;
+
+    try {
+      await updateDoc(doc(db, 'posts', String(postComponent.postUID)), {
+        postLikes: arrayRemove(currentUser.userUID),
+      });
+
+      setPost((prevPost) =>
+        prevPost ? {
+          ...prevPost,
+          postLikes: prevPost.postLikes.filter(like => like !== currentUser.userUID)
+        } : prevPost
+      );
+    } catch (error) {
+      console.error("Error Liking Post:", error);
+    }
+  }
+
+  const ActionButton = ({
+    icon,
+    activeIcon,
+    label,
+    count,
+    isActive,
+    onClick
+  }: {
+    icon: string;
+    activeIcon?: string;
+    label: string;
+    count?: number;
+    isActive?: boolean;
+    onClick?: (e: React.MouseEvent) => void;
+  }) => (
+    <button
+      className="mr-6 flex items-center space-x-1 group relative"
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(label)}
+      onMouseLeave={() => setIsHovered(null)}
+    >
+      <div className="transition-transform duration-200 group-hover:scale-110">
+        <Image
+          src={isActive && activeIcon ? activeIcon : icon}
+          alt={label}
+          width={20}
+          height={20}
+          className={`transition-all duration-200 ${isActive ? 'scale-105' : ''}`}
+        />
+      </div>
+      {count !== undefined && (
+        <p className={`text-sm ml-1 transition-colors duration-200 
+          ${isActive ? 'text-blue-500' : 'text-white-800'} 
+          ${isHovered === label ? 'text-white' : ''}`}
+        >
+          {count}
+        </p>
+      )}
+      {isHovered === label && (
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-dark-700 text-white text-xs py-1 px-2 rounded whitespace-nowrap">
+          {label}
+        </div>
+      )}
+    </button>
+  );
+
+  const PostContent = () => (
+    <div className="p-4 my-2 border border-dark-700 rounded bg-dark-800 transition-colors duration-200 hover:bg-dark-750">
+      <div className="flex justify-between items-start">
+        <div className="flex">
+          {user && (
+            <div className="w-12 h-12 relative group">
+              <Image
+                src={user.userProfilePictureSrc}
+                alt={`${user.userFirstName} ${user.userLastName}`}
+                layout="fill"
+                className="object-cover rounded-full transition-transform duration-200 group-hover:scale-105"
+              />
+            </div>
+          )}
+          <div className="ml-3">
+            <div className="flex flex-col">
+              <div className="flex items-center space-x-2">
+                <h3 className="font-medium hover:underline cursor-pointer">
+                  {user?.userFirstName} {user?.userLastName}
+                </h3>
+                <p className="text-sm font-light text-white-800 hover:text-white transition-colors duration-200">@{user?.userID}</p>
+                <span className="h-[2px] w-[2px] bg-white-800" />
+                <Moment fromNow className="text-white-800 text-sm hover:text-white transition-colors duration-200">
+                  {postComponent.postCreatedAt}
+                </Moment>
+              </div>
+              {community && (
+                <div className="flex items-center space-x-2">
+                  <p className="text-white-800 text-sm">posted on</p>
+                  <Link
+                    href={`/communities/${postComponent.postCommunityId}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="underline text-sm hover:text-white transition-colors duration-200"
+                  >
+                    {community.communityName}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <button className="p-2 rounded-full transition-colors duration-200 hover:bg-dark-700">
+          <Image
+            src="/assets/svgs/post-verticalellipsis.svg"
+            alt="Post options"
+            width={12}
+            height={12}
+          />
+        </button>
+      </div>
+      <p className="text-sm mt-2">
+        {postComponent.postContent}
+      </p>
+      {postComponent.postImageSrc && (
+        <div className="py-4 border-b border-dark-700">
+          <img
+            src={postComponent.postImageSrc}
+            alt=""
+            className="w-auto h-auto object-contain rounded-lg transition-transform duration-200 hover:scale-[1.02]"
+          />
+        </div>
+      )}
+      <div className="flex justify-between mt-3">
+        <div className="flex">
+          <ActionButton
+            icon="/assets/svgs/post-like.svg"
+            activeIcon="/assets/svgs/post-liked.svg"
+            label="Like"
+            count={postComponent.postLikes.length}
+            isActive={hasLiked}
+            onClick={hasLiked ? removeLike : handleLike}
+          />
+          <ActionButton
+            icon="/assets/svgs/post-comment.svg"
+            label="Comment"
+            count={postComponent.postComments.length}
+          />
+          <ActionButton
+            icon="/assets/svgs/post-repost.svg"
+            label="Repost"
+          />
+          <ActionButton
+            icon="/assets/svgs/post-share.svg"
+            label="Share"
+          />
+        </div>
+        <ActionButton
+          icon="/assets/svgs/post-save.svg"
+          label="Save"
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <Link href={`/posts/${post.postUID}`}>
-      <div className='p-4 my-2 border border-dark-700 rounded bg-dark-800'>
-        <div className='flex justify-between items-start'>
-          <div className='flex'>
-            {user && (
-              <div className='w-12 h-12 relative'>
-                <Image src={user.userProfilePictureSrc} alt={`${user.userFirstName} ${user.userLastName}`} layout="fill" className='object-cover rounded-full' />
-              </div>
-            )}
-            <div className='ml-3'>
-              <div className='flex flex-col'>
-                <div className='flex items-center space-x-2'>
-                  <h3 className='font-medium'>{user?.userFirstName} {user?.userLastName}</h3>
-                  <p className='text-sm font-light text-white-800'>@{user?.userID}</p>
-                  <span className='h-[2px] w-[2px] bg-white-800' />
-                  <Moment fromNow className='text-white-800 text-sm'>
-                    {post.postCreatedAt ? post.postCreatedAt : post.postCreatedAt}
-                  </Moment>
-                </div>
-                {community &&
-                  <div className='flex items-center space-x-2'>
-                    <p className='text-white-800 text-sm'>posted on</p>
-                    <Link href={`/communities/${post.postCommunityId}`} className='underline text-sm'>{community.communityName}</Link>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-          <Image src="/assets/svgs/post-verticalellipsis.svg" alt="Post options" width={12} height={12} />
-        </div>
-        <p className='text-sm mt-2'>{post.postContent}</p>
-        {post.postImageSrc && (
-          <div className='py-4 border-b border-dark-700'>
-            <img src={post.postImageSrc} alt="" className='w-auto h-auto object-contain' />
-          </div>
-        )}
-
-        <div className='flex justify-between mt-3'>
-          <div className='flex'>
-            <div className='mr-6 flex items-center space-x-1'>
-              <Image src="/assets/svgs/post-like.svg" alt="Like" width={20} height={20} />
-              <p className='text-sm ml-1'>{post.postLikes.length}</p>
-            </div>
-            <div className='mr-6 flex items-center space-x-1'>
-              <Image src="/assets/svgs/post-comment.svg" alt="Comment" width={20} height={20} />
-              <p className='text-sm ml-1'>{post.postComments.length}</p>
-            </div>
-            <div className='mr-6 flex items-center space-x-1'>
-              <Image src="/assets/svgs/post-repost.svg" alt="Repost" width={20} height={20} />
-            </div>
-            <div className='mr-6 flex items-center space-x-1'>
-              <Image src="/assets/svgs/post-share.svg" alt="Share" width={20} height={20} />
-            </div>
-          </div>
-          <div className='mr-4 flex items-center space-x-1'>
-            <Image src="/assets/svgs/post-save.svg" alt="Save" width={20} height={20} />
-          </div>
-        </div>
-      </div>
+    <Link href={`/posts/${postComponent.postUID}`}>
+      <PostContent />
     </Link>
   );
-}
+} 
