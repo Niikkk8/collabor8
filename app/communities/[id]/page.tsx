@@ -88,10 +88,10 @@ export default function Page({ params }: { params: { id: string } }) {
                 </div>
             </div>
             <div className='w-1/4 overflow-scroll no-scrollbar'>
-                <Image src={community.communityBannerSrc} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover' />
+                <Image src={community.communityBannerSrc} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover aspect-[27/12]' />
                 <div className='mt-[-68px] p-4 border-b border-dark-700'>
                     <div className='flex justify-between items-center'>
-                        <Image src={community.communityProfileSrc} width={120} height={120} alt='' className='object-cover rounded-full border-4 border-dark-900' />
+                        <Image src={community.communityProfileSrc} width={120} height={120} alt='' className='object-cover aspect-square rounded-full border-4 border-dark-900' />
                         {/* <Image src={'/assets/svgs/community-ellipsis.svg'} width={28} height={28} alt='' className='mt-8' /> */}
                     </div>
                     <div className='mt-4 flex justify-between items-center'>

@@ -35,7 +35,7 @@ export type Post = {
     postAuthorName: string,
     postCommunityId?: string,
     postLikes: string[],
-    postComments: Comment[],
+    postComments: CommentReference[];
 }
 
 export type Comment = {
@@ -47,6 +47,15 @@ export type Comment = {
     commentAuthorName: string,
     commentThreads: Comment[],
     commentLikes: string[],
+    postId: string;
+    parentCommentId?: string;
+    threadRefs: CommentReference[];
+}
+
+export type CommentReference = {
+    id: string;
+    createdAt: Date; // For sorting purposes
+    parentId?: string; // Optional parent comment ID
 }
 
 export type Event = {

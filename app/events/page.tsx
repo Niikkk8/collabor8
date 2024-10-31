@@ -83,7 +83,7 @@ export default function Page() {
 
 
     return (
-        <div className='flex'>
+        <div className='flex h-screen overflow-hidden'>
             <div className='p-4 w-3/4 border-r border-dark-700 py-4 px-6 overflow-y-scroll no-scrollbar'>
                 <h1 className='font-medium text-lg ml-2 mb-1'>Events</h1>
                 <div className='flex flex-wrap border-b border-dark-700 pb-6'>
