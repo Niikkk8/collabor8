@@ -102,27 +102,33 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
   };
 
   return (
-    <div className="mt-4 bg-dark-800 p-4 rounded-lg">
-      <div className="flex items-start gap-3">
-        <Image
-          src={currentUser.userProfilePictureSrc}
-          width={40}
-          height={40}
-          alt={currentUser.userFirstName}
-          className="rounded-full"
-        />
-        <div className="flex-1">
+    <div className="mt-2 md:mt-4 bg-dark-800 p-2 md:p-4 rounded-lg">
+      <div className="flex items-start gap-2 md:gap-3">
+        <div className="hidden sm:block">
+          <Image
+            src={currentUser.userProfilePictureSrc}
+            width={40}
+            height={40}
+            alt={currentUser.userFirstName}
+            className="rounded-full w-8 h-8 md:w-10 md:h-10"
+          />
+        </div>
+        <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent flex item from overflowing */}
           <textarea
             placeholder="Write a comment..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full bg-dark-700 rounded-lg p-3 min-h-[60px] text-sm resize-none"
+            className="w-full bg-dark-700 rounded-lg p-2 md:p-3 min-h-[40px] md:min-h-[60px] text-sm resize-none"
             onFocus={() => setIsFocused(true)}
           />
 
           {imagePreview && (
             <div className="relative mt-2 w-fit">
-              <img src={imagePreview} alt="Preview" className="max-w-[300px] rounded-lg" />
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="max-w-full md:max-w-[300px] rounded-lg"
+              />
               <button
                 onClick={removeImage}
                 className="absolute top-2 right-2 bg-dark-900/80 p-1.5 rounded-full"
@@ -133,7 +139,7 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
           )}
 
           {isFocused && (
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 md:mt-3 gap-2">
               <input
                 type="file"
                 accept="image/*"
@@ -143,15 +149,15 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-dark-700"
+                className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg hover:bg-dark-700 text-sm"
               >
                 <Image src={'/assets/svgs/input-camera.svg'} width={20} height={20} alt="Add image" />
                 <span className="text-sm">Add Image</span>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
-                  className="px-4 py-1.5 text-sm hover:text-white-600"
+                  className="px-3 md:px-4 py-1.5 text-sm hover:text-white-600"
                   onClick={() => {
                     setIsFocused(false);
                     setContent('');
@@ -161,7 +167,7 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
                   Cancel
                 </button>
                 <button
-                  className="bg-brand-500 px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
+                  className="bg-brand-500 px-3 md:px-4 py-1.5 rounded-lg text-sm disabled:opacity-50"
                   onClick={handleSubmit}
                   disabled={isLoading || (!content.trim() && !imageFile)}
                 >
@@ -244,41 +250,43 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
   };
 
   return (
-    <div className="mt-4 pl-4">
-      <div className="flex items-start gap-3">
-        {author ? (
-          <Image
-            src={author.userProfilePictureSrc}
-            width={40}
-            height={40}
-            alt={comment.commentAuthorName}
-            className="rounded-full"
-          />
-        ) : (
-          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-        )}
+    <div className="mt-2 md:mt-4 pl-2 md:pl-4">
+      <div className="flex items-start gap-2 md:gap-3">
+        <div className="hidden sm:block">
+          {author ? (
+            <Image
+              src={author.userProfilePictureSrc}
+              width={40}
+              height={40}
+              alt={comment.commentAuthorName}
+              className="rounded-full w-8 h-8 md:w-10 md:h-10"
+            />
+          ) : (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-300 rounded-full"></div>
+          )}
+        </div>
 
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{comment.commentAuthorName}</span>
-            <Moment fromNow className="text-sm text-gray-500">
+        <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent flex item from overflowing */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <span className="font-medium text-sm md:text-base">{comment.commentAuthorName}</span>
+            <Moment fromNow className="text-xs md:text-sm text-gray-500">
               {comment.commentCreatedAt}
             </Moment>
           </div>
 
-          <p className="mt-1 text-sm">{comment.commentContent}</p>
+          <p className="mt-1 text-sm break-words">{comment.commentContent}</p>
 
           {comment.commentImageSrc && (
             <div className="mt-2">
               <img
                 src={comment.commentImageSrc}
                 alt="Comment attachment"
-                className="max-w-[300px] rounded-lg"
+                className="max-w-full md:max-w-[300px] rounded-lg"
               />
             </div>
           )}
 
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-3 md:gap-4 mt-2">
             <button
               onClick={handleLike}
               className="flex items-center gap-1 hover:text-brand-500"
@@ -289,7 +297,7 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
                 height={16}
                 alt="Like"
               />
-              <span className="text-sm">{comment.commentLikes.length}</span>
+              <span className="text-xs md:text-sm">{comment.commentLikes.length}</span>
             </button>
 
             <button
@@ -302,7 +310,7 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
                 height={16}
                 alt="Reply"
               />
-              <span className="text-sm">Reply</span>
+              <span className="text-xs md:text-sm">Reply</span>
             </button>
           </div>
 
@@ -318,10 +326,10 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
           )}
 
           {replies.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-2 md:mt-4">
               <button
                 onClick={() => setShowThreads(!showThreads)}
-                className="text-sm text-gray-500 hover:text-white"
+                className="text-xs md:text-sm text-gray-500 hover:text-white"
               >
                 {showThreads ? 'Hide' : 'Show'} {replies.length} replies
               </button>
