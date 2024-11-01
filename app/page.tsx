@@ -224,7 +224,7 @@ export default function Home() {
           )}
         </div>
       </div>
-      <div className="hidden lg:w-1/4 max-h-screen overflow-y-scroll no-scrollbar p-6">
+      <div className="hidden lg:block w-1/4 max-h-screen overflow-y-scroll no-scrollbar p-6">
         <h4 className="text-sm text-white-800">What&apos;s happening today!</h4>
         <div className="border-b border-dark-700 pb-4">
           {newsArticles.map((article, index) => (
