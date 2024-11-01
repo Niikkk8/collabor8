@@ -25,9 +25,10 @@ const generateSimpleId = () => {
 interface PostInputProps {
   inputPlaceholder: string;
   communityId?: string;
+  onPostCreated?: (newPost: Post) => void;
 }
 
-export default function PostInput({ inputPlaceholder, communityId }: PostInputProps) {
+export default function PostInput({ inputPlaceholder, communityId, onPostCreated }: PostInputProps) {
   const router = useRouter();
   const user: User = useAppSelector((state) => state.user);
   const [content, setContent] = useState('');
@@ -151,7 +152,8 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
         postAuthorId: user.userUID,
         postAuthorName: `${user.userFirstName} ${user.userLastName}`,
         postLikes: [],
-        postComments: []
+        postComments: [],
+        postCreatedAt: new Date(), // Add current date for immediate display
       };
 
       if (imageUrl) {
@@ -170,6 +172,14 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
         await updateCommunityPosts(communityId, postId);
       }
 
+      const completePost: Post = {
+        ...newPost as Post,
+        postUID: postId,
+      };
+
+      if (onPostCreated) {
+        onPostCreated(completePost);
+      }
       setContent('');
       setImageFile(null);
       if (fileInputRef.current) {
@@ -186,7 +196,6 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
       setIsSubmitting(false);
     }
   };
-
   return (
     <div className='bg-dark-800 p-2 sm:p-3 rounded-lg w-full'>
       <div className='bg-dark-700 px-2 sm:px-4 py-2 sm:py-3 rounded'>

@@ -182,7 +182,7 @@ export default function Post({ post }: { post: PostType }) {
           <img
             src={postComponent.postImageSrc}
             alt=""
-            className="w-full h-auto object-contain rounded-lg transition-transform duration-200 hover:scale-[1.02]"
+            className="object-contain rounded-lg transition-transform duration-200 hover:scale-[1.02]"
           />
         </div>
       )}

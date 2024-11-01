@@ -104,6 +104,10 @@ export default function Page({ params }: { params: { id: string } }) {
         </div>
     );
 
+    const handlePostCreated = (newPost: PostType) => {
+        setPosts(prevPosts => [newPost, ...prevPosts]);
+      };
+
     return (
         <div className="relative min-h-screen">
             {/* Mobile Toggle Button */}
@@ -130,8 +134,8 @@ export default function Page({ params }: { params: { id: string } }) {
                         </div>
 
                         <PostInput
-                            inputPlaceholder="Make a post in this community!"
-                            communityId={params.id}
+                            inputPlaceholder={"What's on your mind?"}
+                            onPostCreated={handlePostCreated}
                         />
 
                         <div className="flex items-center p-2 mt-4 min-w-fit">
