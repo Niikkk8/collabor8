@@ -243,7 +243,7 @@ export default function CommunitiesPage() {
       <div className="flex items-center py-2 my-4 min-w-fit">
         <p className="text-sm text-white-800">Want to create your own community?</p>
         <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
-        <button className='bg-brand-500 px-6 py-2 rounded mx-2' onClick={() => setIsModalOpen(true)}>
+        <button className='bg-brand-500 px-6 py-2 rounded mx-2 min-w-fit' onClick={() => setIsModalOpen(true)}>
           Create Community
         </button>
       </div>
@@ -261,7 +261,7 @@ export default function CommunitiesPage() {
         ) : (
           <div className='flex flex-wrap'>
             {visibleCommunities.map((community) => (
-              <div key={community.communityUID} className='w-[32%] mx-2'>
+              <div key={community.communityUID} className='w-full md:w-[32%] mx-2'>
                 <CommunitiesCard community={community} user={user} />
               </div>
             ))}
@@ -296,7 +296,7 @@ export default function CommunitiesPage() {
         ) : (
           <div className='flex flex-wrap'>
             {notJoinedCommunities.slice(0, 6).map((community) => (
-              <div key={community.communityUID} className='w-[32%] mx-2'>
+              <div key={community.communityUID} className='w-full md:w-[32%] mx-2'>
                 <CommunitiesCard community={community} user={user} />
               </div>
             ))}

@@ -44,6 +44,7 @@ export default function Page({ params }: { params: { id: string } }) {
     const [community, setCommunity] = useState<Community | null>(null);
     const [adminData, setAdminData] = useState<User | null>(null);
     const [posts, setPosts] = useState<PostType[]>([]);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -63,50 +64,122 @@ export default function Page({ params }: { params: { id: string } }) {
 
     if (!community) return <div>Community not found</div>;
 
-    return (
-        <div className='flex h-screen'>
-            <div className='p-6 w-3/4 border-r border-dark-700 overflow-y-scroll no-scrollbar'>
-                <PostInput inputPlaceholder='Make a post in this community!' communityId={params.id} />
-                <div className="flex items-center p-2 mt-4 min-w-fit">
-                    <span className="text-sm text-white-800">Sort By: </span>
-                    <p className="flex items-center text-sm ml-2">
-                        New
-                        <Image src="/assets/svgs/searchbar-dropdown.svg" alt="" width={14} height={14} className="ml-1" />
-                    </p>
-                    <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
+    const CommunityInfo = () => (
+        <div className="w-full">
+            <Image
+                src={community.communityBannerSrc}
+                width={400}
+                height={400}
+                alt=""
+                className="w-full h-[240px] object-cover aspect-[27/12]"
+            />
+            <div className="mt-[-68px] p-4 border-b border-dark-700">
+                <div className="flex justify-between items-center">
+                    <Image
+                        src={community.communityProfileSrc}
+                        width={120}
+                        height={120}
+                        alt=""
+                        className="object-cover aspect-square rounded-full border-4 border-dark-900 md:w-[120px] md:h-[120px] w-[80px] h-[80px]"
+                    />
                 </div>
-                <div className="mt-4 space-y-4">
-                    {posts.length === 0 ? (
-                        <div className="flex justify-center items-center p-8 text-white-800">
-                            No posts in this community yet
-                        </div>
-                    ) : (
-                        posts.map((post) => (
-                            <Post key={post.postUID} post={post} />
-                        ))
-                    )}
+                <div className="mt-4 flex justify-between items-center">
+                    <h1 className="text-lg font-semibold w-1/2 truncate">
+                        {community.communityName}
+                    </h1>
+                    <CommunityActionButton
+                        communityId={params.id}
+                        communityAdmin={community.communityAdmin}
+                    />
                 </div>
+                <div className="bg-dark-800 mt-4 py-2 px-4 rounded">
+                    <p className="text-sm">{community.communityMembers.length} members</p>
+                </div>
+                <p className="text-sm my-6">{community.communityDescription}</p>
             </div>
-            <div className='w-1/4 overflow-scroll no-scrollbar'>
-                <Image src={community.communityBannerSrc} width={400} height={400} alt='' className='w-[540px] h-[240px] object-cover aspect-[27/12]' />
-                <div className='mt-[-68px] p-4 border-b border-dark-700'>
-                    <div className='flex justify-between items-center'>
-                        <Image src={community.communityProfileSrc} width={120} height={120} alt='' className='object-cover aspect-square rounded-full border-4 border-dark-900' />
-                        {/* <Image src={'/assets/svgs/community-ellipsis.svg'} width={28} height={28} alt='' className='mt-8' /> */}
+            <div className="p-4">
+                <h1 className="font-medium">Admin</h1>
+                {adminData && <ProfileInfo user={adminData} />}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="relative min-h-screen">
+            {/* Mobile Toggle Button */}
+            <button
+                className="fixed bottom-20 right-4 z-50 lg:hidden bg-dark-800 p-3 rounded-full shadow-lg"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                <Image
+                    src="/assets/svgs/menu.svg"
+                    width={24}
+                    height={24}
+                    alt="Toggle sidebar"
+                />
+            </button>
+
+            <div className="flex flex-col lg:flex-row h-full">
+                {/* Main Content */}
+                <div className="w-full lg:w-3/4 p-4 lg:border-r border-dark-700 overflow-y-auto">
+                    <div className="max-w-3xl mx-auto">
+                        {/* Mobile Community Info Preview */}
+                        <div className="lg:hidden mb-6">
+                            <h1 className="text-xl font-bold">{community.communityName}</h1>
+                            <p className="text-sm text-white-800">{community.communityMembers.length} members</p>
+                        </div>
+
+                        <PostInput
+                            inputPlaceholder="Make a post in this community!"
+                            communityId={params.id}
+                        />
+
+                        <div className="flex items-center p-2 mt-4 min-w-fit">
+                            <span className="text-sm text-white-800">Sort By: </span>
+                            <p className="flex items-center text-sm ml-2">
+                                New
+                                <Image
+                                    src="/assets/svgs/searchbar-dropdown.svg"
+                                    alt=""
+                                    width={14}
+                                    height={14}
+                                    className="ml-1"
+                                />
+                            </p>
+                            <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
+                        </div>
+
+                        <div className="mt-4 space-y-4">
+                            {posts.length === 0 ? (
+                                <div className="flex justify-center items-center p-8 text-white-800">
+                                    No posts in this community yet
+                                </div>
+                            ) : (
+                                posts.map((post) => (
+                                    <Post key={post.postUID} post={post} />
+                                ))
+                            )}
+                        </div>
                     </div>
-                    <div className='mt-4 flex justify-between items-center'>
-                        <h1 className='text-lg font-semibold w-1/2 truncate'>{community.communityName}</h1>
-                        <CommunityActionButton communityId={params.id} communityAdmin={community.communityAdmin} />
-                    </div>
-                    <div className='bg-dark-800 mt-4 py-2 px-4 rounded'>
-                        <p className='text-sm'>{community.communityMembers.length} members</p>
-                    </div>
-                    <p className='text-sm my-6'>{community.communityDescription}</p>
                 </div>
-                <div className='p-4'>
-                    <h1 className='font-medium'>Admin</h1>
-                    {adminData && <ProfileInfo user={adminData} />}
+
+                <div className={`
+                    fixed lg:relative top-0 right-0 h-full 
+                    w-3/4 sm:w-1/2 lg:w-1/4 
+                    bg-dark-900 lg:bg-transparent
+                    transform transition-transform duration-300 ease-in-out
+                    ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                    overflow-y-auto z-40
+                `}>
+                    <CommunityInfo />
                 </div>
+
+                {isSidebarOpen && (
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
             </div>
         </div>
     );

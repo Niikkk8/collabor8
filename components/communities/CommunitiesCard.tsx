@@ -16,9 +16,9 @@ export default function CommunitiesCard({ community, user }: { community: Commun
                 </div>
                 {
                     hasJoined ?
-                        <Link href={`/communities/${community.communityUID}`} className='text-sm px-6 py-2 h-fit border border-dark-300 rounded'>View Community</Link>
+                        <Link href={`/communities/${community.communityUID}`} className='text-sm px-6 py-2 h-fit border border-dark-300 rounded min-w-fit'>View Community</Link>
                         :
-                        <Link href={`/communities/${community.communityUID}`} className='text-sm px-6 py-2 h-fit bg-brand-500 rounded'>Join Community</Link>
+                        <Link href={`/communities/${community.communityUID}`} className='text-sm px-6 py-2 h-fit bg-brand-500 rounded min-w-fit'>Join Community</Link>
                 }
             </div>
         </div >

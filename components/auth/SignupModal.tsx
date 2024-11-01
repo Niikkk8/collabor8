@@ -289,197 +289,239 @@ export default function SignupModal() {
 
   return (
     <Modal open={isOpen} onClose={() => dispatch(closeSignupModal())}>
-      <div className="fixed top-0 left-0 flex items-center justify-center w-full h-full">
+      <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6">
         <div
-          className="fixed top-0 left-0 w-full h-full bg-black opacity-50"
+          className="fixed inset-0 bg-black opacity-50"
           onClick={() => dispatch(closeSignupModal())}
         />
-        <div className="relative w-[50%] min-w-[280px] max-w-[520px] px-6 py-12 bg-white-500 flex flex-col items-center justify-center rounded-lg overflow-hidden">
-          <span
-            onClick={() => dispatch(closeSignupModal())}
-            className="absolute cursor-pointer top-5 right-5 px-[10px] py-[3px] rounded-full bg-red-500"
-          >
-            X
-          </span>
-          <form className="flex flex-col w-full text-dark-800 mb-6" onSubmit={handleSubmit}>
-            <h1 className='text-center font-bold text-lg mb-2'>Get Started with the Collabor8</h1>
-            <button type="button" onClick={handleGoogleSignup} className='my-2 bg-blue-500 py-2 rounded text-white-500 flex items-center justify-center'>
-              <Image src={'/logos/google.png'} width={32} height={32} alt='' className='rounded-full bg-white-500 p-1 mr-2' />
-              Signup with Google
-            </button>
-            <div className="flex items-center gap-6 mb-4">
-              <span className="h-[1px] bg-gray-400 w-[80%]" />
-              <p className="text-gray-500">or</p>
-              <span className="h-[1px] bg-gray-400 w-[80%]" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-1">
-                <TextField
-                  name="firstName"
-                  label="First Name"
-                  fullWidth
-                  value={signupValues.firstName}
-                  onChange={handleSignupChange}
-                  required
-                />
-              </div>
-              <div className="col-span-1">
-                <TextField
-                  name="lastName"
-                  label="Last Name"
-                  fullWidth
-                  value={signupValues.lastName}
-                  onChange={handleSignupChange}
-                  required
-                />
-              </div>
-              <div className="col-span-2">
-                <TextField
-                  name="username"
-                  label="Username"
-                  fullWidth
-                  value={signupValues.username}
-                  onChange={handleSignupChange}
-                  required
-                  error={!!usernameError}
-                  helperText={usernameError}
-                />
-              </div>
-              <div className="col-span-2">
-                <TextField
-                  name="email"
-                  label="Email"
-                  type="email"
-                  fullWidth
-                  value={signupValues.email}
-                  onChange={handleSignupChange}
-                  required
-                />
-              </div>
-              <div className="col-span-2">
-                <TextField
-                  name="password"
-                  label="Password"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  value={signupValues.password}
-                  onChange={handleSignupChange}
-                  required
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={togglePasswordVisibility}
-                          edge="end"
-                        >
-                          {showPassword ? (
-                            <div className="w-5 h-5 bg-gray-400 rounded-full" />
-                          ) : (
-                            <span className="w-5 h-1 bg-gray-400 block" />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </div>
-              <div className="col-span-2">
-                <TextField
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  fullWidth
-                  value={signupValues.confirmPassword}
-                  onChange={handleSignupChange}
-                  required
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          onClick={toggleConfirmPasswordVisibility}
-                          edge="end"
-                        >
-                          {showConfirmPassword ? (
-                            <div className="w-5 h-5 bg-gray-400 rounded-full" />
-                          ) : (
-                            <span className="w-5 h-1 bg-gray-400 block" />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={profileInputRef}
-                  onChange={(e) => handleImageChange(e, 'profile')}
-                />
-                <div className="flex items-center gap-2">
-                  {profilePreview && (
-                    <ImagePreview
-                      src={profilePreview}
-                      alt="Profile Preview"
-                      type="profile"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => profileInputRef.current?.click()}
-                    className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-                  >
-                    Upload Profile Picture (Optional)
-                  </button>
-                </div>
-              </div>
-              <div className="col-span-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  ref={bannerInputRef}
-                  onChange={(e) => handleImageChange(e, 'banner')}
-                />
-                <div className="flex items-center gap-2">
-                  {bannerPreview && (
-                    <ImagePreview
-                      src={bannerPreview}
-                      alt="Banner Preview"
-                      type="banner"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => bannerInputRef.current?.click()}
-                    className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-                  >
-                    Upload Banner (Optional)
-                  </button>
-                </div>
-              </div>
-            </div>
+        <div className="relative w-full sm:w-[90%] md:w-[70%] lg:w-[50%] min-w-[280px] max-w-[520px] bg-white-500 rounded-lg overflow-hidden">
+          <div className="px-4 sm:px-6 py-8 sm:py-12">
+            <span
+              onClick={() => dispatch(closeSignupModal())}
+              className="absolute cursor-pointer top-2 right-2 sm:top-5 sm:right-5 px-2 py-1 sm:px-[10px] sm:py-[3px] rounded-full bg-red-500 text-white-500 text-sm"
+            >
+              X
+            </span>
 
-            {imageError && (
-              <div className="col-span-2">
-                <p className="text-red-500">{imageError}</p>
+            <form className="flex flex-col w-full text-dark-800 mb-14 sm:mb-6" onSubmit={handleSubmit}>
+              <h1 className="text-center font-bold text-base sm:text-lg mb-2">
+                Get Started with the Collabor8
+              </h1>
+
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                className="my-2 bg-blue-500 py-2 rounded text-white-500 flex items-center justify-center text-sm sm:text-base"
+              >
+                <Image
+                  src={'/logos/google.png'}
+                  width={24}
+                  height={24}
+                  alt=""
+                  className="rounded-full bg-white-500 p-1 mr-2 sm:w-8 sm:h-8"
+                />
+                Signup with Google
+              </button>
+
+              <div className="flex items-center gap-4 sm:gap-6 mb-4">
+                <span className="h-[1px] bg-gray-400 w-full" />
+                <p className="text-gray-500 text-sm whitespace-nowrap">or</p>
+                <span className="h-[1px] bg-gray-400 w-full" />
               </div>
-            )}
-            {error && <p className="text-red-500 mt-2">{error}</p>}
-            <button type="submit" className="mt-4 bg-blue-500 py-2 rounded text-white-500">
-              Sign Up
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="col-span-1">
+                  <TextField
+                    name="firstName"
+                    label="First Name"
+                    fullWidth
+                    value={signupValues.firstName}
+                    onChange={handleSignupChange}
+                    required
+                    size="small"
+                    className="text-sm sm:text-base"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <TextField
+                    name="lastName"
+                    label="Last Name"
+                    fullWidth
+                    value={signupValues.lastName}
+                    onChange={handleSignupChange}
+                    required
+                    size="small"
+                    className="text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <TextField
+                    name="username"
+                    label="Username"
+                    fullWidth
+                    value={signupValues.username}
+                    onChange={handleSignupChange}
+                    required
+                    error={!!usernameError}
+                    helperText={usernameError}
+                    size="small"
+                    className="text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <TextField
+                    name="email"
+                    label="Email"
+                    type="email"
+                    fullWidth
+                    value={signupValues.email}
+                    onChange={handleSignupChange}
+                    required
+                    size="small"
+                    className="text-sm sm:text-base"
+                  />
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <TextField
+                    name="password"
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    value={signupValues.password}
+                    onChange={handleSignupChange}
+                    required
+                    size="small"
+                    className="text-sm sm:text-base"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={togglePasswordVisibility}
+                            edge="end"
+                            size="small"
+                          >
+                            {showPassword ? (
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 rounded-full" />
+                            ) : (
+                              <span className="w-4 h-1 sm:w-5 sm:h-1 bg-gray-400 block" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <TextField
+                    name="confirmPassword"
+                    label="Confirm Password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    fullWidth
+                    value={signupValues.confirmPassword}
+                    onChange={handleSignupChange}
+                    required
+                    size="small"
+                    className="text-sm sm:text-base"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label="toggle password visibility"
+                            onClick={toggleConfirmPasswordVisibility}
+                            edge="end"
+                            size="small"
+                          >
+                            {showConfirmPassword ? (
+                              <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gray-400 rounded-full" />
+                            ) : (
+                              <span className="w-4 h-1 sm:w-5 sm:h-1 bg-gray-400 block" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={profileInputRef}
+                    onChange={(e) => handleImageChange(e, 'profile')}
+                  />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    {profilePreview && (
+                      <ImagePreview
+                        src={profilePreview}
+                        alt="Profile Preview"
+                        type="profile"
+                        // className="w-16 h-16 sm:w-20 sm:h-20"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => profileInputRef.current?.click()}
+                      className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                    >
+                      Upload Profile Picture (Optional)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="col-span-1 sm:col-span-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={bannerInputRef}
+                    onChange={(e) => handleImageChange(e, 'banner')}
+                  />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    {bannerPreview && (
+                      <ImagePreview
+                        src={bannerPreview}
+                        alt="Banner Preview"
+                        type="banner"
+                        // className="w-24 h-12 sm:w-32 sm:h-16"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100"
+                    >
+                      Upload Banner (Optional)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {imageError && (
+                <div className="col-span-1 sm:col-span-2">
+                  <p className="text-red-500 text-sm">{imageError}</p>
+                </div>
+              )}
+              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+
+              <button type="submit" className="mt-4 bg-blue-500 py-2 rounded text-white-500 text-sm sm:text-base">
+                Sign Up
+              </button>
+            </form>
+
+            <button
+              onClick={handleToggleModals}
+              className="absolute bottom-0 left-0 w-full p-2 sm:p-3 pt-3 sm:pt-4 text-sm sm:text-base text-blue-500 hover:bg-gray-300 active:bg-blue-400 active:text-white-500"
+            >
+              Already have an account?
             </button>
-          </form>
-          <button
-            onClick={handleToggleModals}
-            className="absolute bottom-0 w-full p-3 pt-4 text-blue-500 hover:bg-gray-300 active:bg-blue-400 active:text-white-500"
-          >
-            Already have an account?
-          </button>
+          </div>
         </div>
       </div>
     </Modal>

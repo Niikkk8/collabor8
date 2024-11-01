@@ -143,7 +143,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="w-3/4 border-r border-dark-700 p-4 overflow-y-scroll no-scrollbar">
+      <div className="w-full md:w-3/4 border-r border-dark-700 p-4 overflow-y-scroll no-scrollbar">
         <div className="flex justify-between items-start">
           <div className="flex">
             {user && (
@@ -301,7 +301,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <div className="w-1/4 p-4">
+      <div className="hidden md:block w-1/4 p-4">
       </div>
     </div>
   );

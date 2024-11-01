@@ -177,7 +177,7 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
       }
 
       console.log('Post created successfully');
-      
+
       router.refresh();
     } catch (err) {
       console.error('Detailed error:', err);
@@ -188,35 +188,56 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
   };
 
   return (
-    <div className='bg-dark-800 p-3 rounded-lg'>
-      <div className='bg-dark-700 px-4 py-3 rounded'>
+    <div className='bg-dark-800 p-2 sm:p-3 rounded-lg w-full'>
+      <div className='bg-dark-700 px-2 sm:px-4 py-2 sm:py-3 rounded'>
         {error && (
-          <div className='bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded mb-4 text-sm'>
+          <div className='bg-red-500/10 border border-red-500/50 text-red-500 p-2 sm:p-3 rounded mb-3 text-sm'>
             {error}
           </div>
         )}
-        <div className="border-b border-dark-500 pb-6">
-          <div className="flex items-center p-2">
+
+        <div className="border-b border-dark-500 pb-4 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center p-2">
             <div className='flex w-full'>
-              <Image src={user?.userProfilePictureSrc || "/assets/placeholder-images/profile-picture.jpg"} alt="" width={48} height={48} className='object-cover rounded-full aspect-square' />
+              <div className="flex-shrink-0">
+                <Image
+                  src={user?.userProfilePictureSrc || "/assets/placeholder-images/profile-picture.jpg"}
+                  alt=""
+                  width={40}
+                  height={40}
+                  className='object-cover rounded-full aspect-square sm:w-12 sm:h-12'
+                />
+              </div>
               <textarea
                 value={content}
                 onChange={(e) => {
                   setError(null);
                   setContent(e.target.value);
                 }}
-                className='ml-3 outline-none bg-transparent w-full resize-none'
+                className='ml-3 outline-none bg-transparent w-full resize-none text-sm sm:text-base'
                 placeholder={inputPlaceholder}
                 rows={1}
-                style={{ minHeight: '48px' }}
+                style={{ minHeight: '40px', maxHeight: '200px' }}
               />
             </div>
-            <div className='flex'>
-              <button className='mx-1'>
-                <Image src="/assets/svgs/input-gif.svg" alt="Add GIF" width={28} height={28} />
+            <div className='flex mt-2 sm:mt-0 justify-end sm:justify-start'>
+              <button className='mx-1 hover:opacity-80 transition-opacity'>
+                <Image
+                  src="/assets/svgs/input-gif.svg"
+                  alt="Add GIF"
+                  width={24}
+                  height={24}
+                  className='sm:w-7 sm:h-7'
+                />
               </button>
-              <button className='mx-1'>
-                <Image src="/assets/svgs/input-emoji.svg" alt="Add emoji" width={28} height={28} />
+              <button className='mx-1 hover:opacity-80 transition-opacity'>
+                <Image
+                  src="/assets/svgs/input-emoji.svg"
+                  alt="Add emoji"
+                  width={24}
+                  height={24}
+                  className='sm:w-7 sm:h-7'
+                />
               </button>
             </div>
           </div>
@@ -228,15 +249,11 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
               </p>
             </div>
           )}
-
-          {/* <div className='flex items-center mt-4 px-2'>
-            <Image src="/assets/svgs/input-globe.svg" alt="" width={20} height={20} />
-            <p className='text-sm mx-1'>Everyone can reply</p>
-          </div> */}
         </div>
-        <div className='flex items-center justify-between p-2 mt-1'>
-          <div className='flex items-center'>
-            <div className='flex items-center mr-4'>
+
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 mt-1 space-y-3 sm:space-y-0'>
+          <div className='flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto'>
+            <div className='flex items-center'>
               <input
                 type="file"
                 accept="image/*"
@@ -249,25 +266,38 @@ export default function PostInput({ inputPlaceholder, communityId }: PostInputPr
                 htmlFor="image-upload"
                 className='flex items-center cursor-pointer hover:opacity-80 transition-opacity'
               >
-                <Image src="/assets/svgs/input-camera.svg" alt="" width={20} height={20} className='mr-2' />
-                <p className='text-sm'>
+                <Image
+                  src="/assets/svgs/input-camera.svg"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className='mr-2'
+                />
+                <p className='text-sm whitespace-nowrap'>
                   {imageFile ? 'Change image' : 'Image/Video'}
                 </p>
               </label>
             </div>
-            {
-              !communityId &&
+
+            {!communityId && (
               <div
                 className='flex items-center cursor-pointer hover:opacity-80 transition-opacity'
                 onClick={() => setIsEventModalOpen(true)}
               >
-                <Image src="/assets/svgs/input-events.svg" alt="" width={20} height={20} className='mr-2' />
+                <Image
+                  src="/assets/svgs/input-events.svg"
+                  alt=""
+                  width={18}
+                  height={18}
+                  className='mr-2'
+                />
                 <p className='text-sm'>Events</p>
               </div>
-            }
+            )}
           </div>
+
           <button
-            className={`py-2 px-6 rounded-lg transition-colors ${isSubmitting
+            className={`w-full sm:w-auto py-2 px-6 rounded-lg transition-colors ${isSubmitting
               ? 'bg-brand-300 cursor-not-allowed'
               : 'bg-brand-500 hover:bg-brand-600'
               }`}

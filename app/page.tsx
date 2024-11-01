@@ -190,7 +190,7 @@ export default function Home() {
 
   return (
     <main className="flex h-screen overflow-hidden">
-      <div className="w-[75%] border-r border-dark-700 py-4 px-6 overflow-y-scroll no-scrollbar">
+      <div className="w-full lg:w-3/4 border-r border-dark-700 py-4 px-6 overflow-y-scroll no-scrollbar">
         <PostInput inputPlaceholder={"What's on your mind?"} />
         <div className="flex items-center p-2 mt-4 min-w-fit">
           <span className="text-sm text-white-800">Sort By: </span>
@@ -216,7 +216,7 @@ export default function Home() {
           )}
         </div>
       </div>
-      <div className="w-[25%] max-h-screen overflow-y-scroll no-scrollbar p-6">
+      <div className="hidden lg:w-1/4 max-h-screen overflow-y-scroll no-scrollbar p-6">
         <h4 className="text-sm text-white-800">What&apos;s happening today!</h4>
         <div className="border-b border-dark-700 pb-4">
           {newsArticles.map((article, index) => (

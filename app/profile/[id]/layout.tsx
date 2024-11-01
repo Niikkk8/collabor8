@@ -41,7 +41,7 @@ export default async function ProfileLayout({
 
     return (
         <div className='flex'>
-            <div className='w-3/4 h-screen overflow-scroll no-scrollbar border-r border-dark-700'>
+            <div className='w-full lg:w-3/4 h-screen overflow-scroll no-scrollbar border-r border-dark-700'>
                 <div className='p-4'>
                     <Image src={'/assets/placeholder-images/profile-banner.jpeg'} height={400} width={800} alt='' className='w-full h-[200px] object-cover rounded' />
                     <div className='mt-[-72px]'>

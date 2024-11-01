@@ -134,7 +134,7 @@ export default function SearchBar() {
 
   return (
     <div className='px-6 py-4 flex justify-between w-full border-b border-dark-700'>
-      <div ref={searchRef} className='relative flex items-center bg-dark-800 py-3 px-4 rounded w-full mr-20'>
+      <div ref={searchRef} className='relative flex items-center bg-dark-800 py-3 px-4 rounded w-full lg:mr-20'>
         <Image
           src='/assets/svgs/searchbar-search.svg'
           alt="Search Icon"
@@ -230,7 +230,7 @@ export default function SearchBar() {
         )}
       </div>
       <div className='flex items-center min-w-fit'>
-        <div className='p-3 rounded-lg mx-2 bg-dark-800'>
+        <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
           <Image
             src='/assets/svgs/searchbar-messages.svg'
             alt="Messages Icon"
@@ -239,7 +239,7 @@ export default function SearchBar() {
             className='w-[22px] h-[22px]'
           />
         </div>
-        <div className='p-3 rounded-lg mx-2 bg-dark-800'>
+        <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
           <Image
             src='/assets/svgs/searchbar-saved.svg'
             alt="Saved Icon"
@@ -258,9 +258,9 @@ export default function SearchBar() {
               alt="User Profile Picture"
               width={48}
               height={48}
-              className='object-cover rounded-full aspect-square'
+              className='object-cover rounded-full aspect-square mr-2 md:m-0'
             />
-            <h3 className='text-sm ml-2 mr-1 text-white'>{user.userFirstName} {user.userLastName}</h3>
+            <h3 className='hidden md:block text-sm ml-2 mr-1 text-white'>{user.userFirstName} {user.userLastName}</h3>
             <Image
               src='/assets/svgs/searchbar-dropdown.svg'
               alt="Dropdown Icon"

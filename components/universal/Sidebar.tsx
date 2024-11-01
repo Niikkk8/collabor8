@@ -19,7 +19,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className='w-1/5 min-w-fit h-screen border-r border-dark-700 flex flex-col justify-between'>
+    <div className='hidden w-1/5 min-w-fit h-screen border-r border-dark-700 md:flex flex-col justify-between'>
       <div>
         <div className='p-6 flex items-center'>
           <h1 className='bg-[#1F28FF] text-3xl rounded w-fit py-1 px-4' style={{ fontFamily: 'Impact, sans-serif' }}>C</h1>

@@ -20,19 +20,19 @@ export default function ProfileInfo({ user }: { user: User }) {
                 </div>
             </div>
             <div className='flex justify-between'>
-                <div className='flex flex-col items-center mt-4'>
+                <div className='flex flex-col items-center mt-4 mx-1'>
                     <h3 className='font-semibold text-sm leading-4'>{user.userFollowers.length}</h3>
                     <p className='text-sm font-medium text-white-800'>Followers</p>
                 </div>
-                <div className='flex flex-col items-center mt-4'>
+                <div className='flex flex-col items-center mt-4 mx-1'>
                     <h3 className='font-semibold text-sm leading-4'>{user.userFollowing.length}</h3>
                     <p className='text-sm font-medium text-white-800'>Following</p>
                 </div>
-                <div className='flex flex-col items-center mt-4'>
+                <div className='flex flex-col items-center mt-4 mx-1'>
                     <h3 className='font-semibold text-sm leading-4'>{user.userPosts.length}</h3>
                     <p className='text-sm font-medium text-white-800'>Posts</p>
                 </div>
-                <div className='flex flex-col items-center mt-4'>
+                <div className='flex flex-col items-center mt-4 mx-1'>
                     <h3 className='font-semibold text-sm leading-4'>{user.userCommunities.length}</h3>
                     <p className='text-sm font-medium text-white-800'>Communities</p>
                 </div>
