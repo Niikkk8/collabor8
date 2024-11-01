@@ -43,11 +43,11 @@ export default async function ProfileLayout({
         <div className='flex'>
             <div className='w-full lg:w-3/4 h-screen overflow-scroll no-scrollbar border-r border-dark-700'>
                 <div className='p-4'>
-                    <Image src={'/assets/placeholder-images/profile-banner.jpeg'} height={400} width={800} alt='' className='w-full h-[200px] object-cover rounded' />
+                    <Image src={user.userProfileBannerSrc} height={400} width={800} alt='' className='w-full h-[200px] object-cover rounded' />
                     <div className='mt-[-72px]'>
                         <div className='flex justify-between px-4 mb-6'>
                             <Image
-                                src={'/assets/placeholder-images/profile-picture.jpg'}
+                                src={user.userProfilePictureSrc}
                                 alt=''
                                 width={160}
                                 height={160}
