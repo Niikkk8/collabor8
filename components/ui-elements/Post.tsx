@@ -126,24 +126,28 @@ export default function Post({ post }: { post: PostType }) {
       <div className="flex justify-between items-start">
         <div className="flex flex-grow">
           {user && (
-            <div className="w-10 h-10 sm:w-12 sm:h-12 relative group flex-shrink-0">
-              <Image
-                src={user.userProfilePictureSrc}
-                alt={`${user.userFirstName} ${user.userLastName}`}
-                layout="fill"
-                className="object-cover rounded-full transition-transform duration-200 group-hover:scale-105"
-              />
-            </div>
+            <Link href={`/profile/${postComponent.postAuthorId}`}>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 relative group flex-shrink-0">
+                <Image
+                  src={user.userProfilePictureSrc}
+                  alt={`${user.userFirstName} ${user.userLastName}`}
+                  layout="fill"
+                  className="object-cover rounded-full transition-transform duration-200 group-hover:scale-105"
+                />
+              </div>
+            </Link>
           )}
           <div className="ml-2 sm:ml-3 min-w-0">
             <div className="flex flex-col">
               <div className="flex items-center flex-wrap gap-1 sm:gap-2">
-                <h3 className="font-medium hover:underline cursor-pointer text-sm sm:text-base truncate">
-                  {user?.userFirstName} {user?.userLastName}
-                </h3>
-                <p className="text-xs sm:text-sm font-light text-white-800 hover:text-white transition-colors duration-200 truncate">
-                  @{user?.userID}
-                </p>
+                <Link href={`/profile/${postComponent.postAuthorId}`} className='flex items-center gap-1'>
+                  <h3 className="font-medium hover:underline cursor-pointer text-sm sm:text-base truncate">
+                    {user?.userFirstName} {user?.userLastName}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-light text-white-800 hover:text-white transition-colors duration-200 truncate">
+                    @{user?.userID}
+                  </p>
+                </Link>
                 <span className="hidden sm:block h-[2px] w-[2px] bg-white-800" />
                 <Moment fromNow className="text-white-800 text-xs sm:text-sm hover:text-white transition-colors duration-200">
                   {postComponent.postCreatedAt}

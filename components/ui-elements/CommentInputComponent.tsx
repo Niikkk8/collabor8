@@ -6,6 +6,7 @@ import { useAppSelector } from '@/redux/hooks';
 import { arrayUnion, doc, updateDoc, collection, setDoc, getDoc, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/firebase';
+import Link from 'next/link';
 
 interface CommentInputProps {
   postId: string;
@@ -252,23 +253,31 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
   return (
     <div className="mt-2 md:mt-4 pl-2 md:pl-4">
       <div className="flex items-start gap-2 md:gap-3">
-        <div className="hidden sm:block">
+        <div className="block">
           {author ? (
-            <Image
-              src={author.userProfilePictureSrc}
-              width={40}
-              height={40}
-              alt={comment.commentAuthorName}
-              className="rounded-full w-8 h-8 md:w-10 md:h-10"
-            />
+            <Link href={`/profile/${comment.commentAuthorId}`}>
+              <Image
+                src={author.userProfilePictureSrc}
+                width={40}
+                height={40}
+                alt={comment.commentAuthorName}
+                className="rounded-full w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10"
+              />
+            </Link>
           ) : (
             <div className="w-8 h-8 md:w-10 md:h-10 bg-gray-300 rounded-full"></div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent flex item from overflowing */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-            <span className="font-medium text-sm md:text-base">{comment.commentAuthorName}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link href={`/profile/${comment.commentAuthorId}`} className='flex items-center gap-1'>
+              <span className="font-medium text-sm md:text-base">{comment.commentAuthorName}</span>
+              <p className="text-xs sm:text-sm font-light text-white-800 hover:text-white transition-colors duration-200 truncate">
+                @{author?.userID}
+              </p>
+            </Link>
+            <span className="hidden sm:block h-[2px] w-[2px] bg-white-800" />
             <Moment fromNow className="text-xs md:text-sm text-gray-500">
               {comment.commentCreatedAt}
             </Moment>

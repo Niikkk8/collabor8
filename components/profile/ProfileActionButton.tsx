@@ -1,12 +1,13 @@
 "use client";
 
+import React, { useState } from 'react';
 import { db } from '@/firebase';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setUser } from '@/redux/userSlice';
 import { User } from '@/types';
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
-import React from 'react';
 import { useRouter } from 'next/navigation';
+import EditProfileModal from './EditProfileModal';
 
 export default function ProfileActionButton({ id }: { id: string }) {
   const dispatch = useAppDispatch();
@@ -14,6 +15,7 @@ export default function ProfileActionButton({ id }: { id: string }) {
   const user: User = useAppSelector((state) => state.user);
   const isLoggedInUser: boolean = user.userUID === id;
   const isFollowing: boolean = user.userFollowing.includes(id);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   async function handleFollow() {
     try {
@@ -59,25 +61,31 @@ export default function ProfileActionButton({ id }: { id: string }) {
     }
   }
 
-  async function handleEditProfile() {
-
-  }
-
   return (
-    <div>
+    <>
       {isLoggedInUser ? (
-        <button className="mt-24 mr-4 border border-dark-500 hover:bg-dark-500 transition-colors h-fit text-sm py-2 px-6 rounded-lg" onClick={handleEditProfile}>
-          Edit Profile
-        </button>
+        <>
+          <button
+            className="mt-4 sm:mt-24 w-full sm:w-auto border border-dark-500 hover:bg-dark-500 transition-colors h-fit text-xs sm:text-sm py-1.5 sm:py-2 px-4 sm:px-6 rounded-lg"
+            onClick={() => setIsEditModalOpen(true)}
+          >
+            Edit Profile
+          </button>
+          <EditProfileModal
+            user={user}
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+          />
+        </>
       ) : (
         <button
-          className={`mt-24 mr-4 h-fit text-sm py-2 px-8 rounded-lg ${isFollowing ? 'border border-white-800' : 'bg-brand-500'
+          className={`mt-4 sm:mt-24 w-full sm:w-auto h-fit text-xs sm:text-sm py-1.5 sm:py-2 px-6 sm:px-8 rounded-lg ${isFollowing ? 'border border-white-800' : 'bg-brand-500'
             }`}
           onClick={isFollowing ? handleUnfollow : handleFollow}
         >
           {isFollowing ? 'Unfollow' : 'Follow'}
         </button>
       )}
-    </div>
+    </>
   );
 }
