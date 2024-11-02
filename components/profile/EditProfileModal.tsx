@@ -121,10 +121,10 @@ export default function EditProfileModal({ user, isOpen, onClose }: EditProfileM
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="md:fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div
                 ref={modalRef}
-                className="bg-dark-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                className="bg-dark-800 rounded-xl w-full max-w-2xl h-92 overflow-y-scroll no-scrollbar"
             >
                 <div className="flex items-center justify-between p-4 border-b border-dark-700">
                     <h2 className="text-lg font-medium">Edit Profile</h2>

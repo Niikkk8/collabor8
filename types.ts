@@ -13,6 +13,22 @@ export type User = {
     userPosts: string[],
     userCommunities: string[],
     userMeetups: string[],
+    portfolio?: Portfolio,
+}
+
+export type Portfolio = {
+    skills: PortfolioItem[],
+    experience: PortfolioItem[],
+    certifications: PortfolioItem[],
+    education: PortfolioItem[],
+    aboutMe: string,
+}
+
+export type PortfolioItem = {
+    id: string,
+    title: string,
+    description: string,
+    date?: string,
 }
 
 export type Community = {
@@ -35,7 +51,7 @@ export type Post = {
     postAuthorName: string,
     postCommunityId?: string,
     postLikes: string[],
-    postComments: CommentReference[];
+    postComments: CommentReference[],
 }
 
 export type Comment = {
@@ -47,8 +63,8 @@ export type Comment = {
     commentAuthorName: string,
     commentThreads: Comment[],
     commentLikes: string[],
-    postId: string;
-    parentCommentId?: string;
+    postId: string,
+    parentCommentId?: string,
     threadRefs: CommentReference[];
 }
 
