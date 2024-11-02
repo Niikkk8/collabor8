@@ -126,25 +126,17 @@ export default function EditProfileModal({ user, isOpen, onClose }: EditProfileM
                 ref={modalRef}
                 className="bg-dark-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
             >
-                {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-dark-700">
                     <h2 className="text-lg font-medium">Edit Profile</h2>
                     <button
                         onClick={onClose}
-                        className="hover:bg-dark-700 p-2 rounded-full transition-colors"
+                        className="hover:bg-red-500 p-2 px-4 rounded-full transition-colors text-white-500"
                     >
-                        <Image
-                            src="/assets/svgs/close.svg"
-                            alt="Close"
-                            width={20}
-                            height={20}
-                        />
+                       X
                     </button>
                 </div>
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="p-4">
-                    {/* Banner Image */}
                     <div className="relative">
                         <div
                             className="w-full h-[150px] rounded-lg overflow-hidden bg-dark-700 cursor-pointer group"
@@ -170,7 +162,6 @@ export default function EditProfileModal({ user, isOpen, onClose }: EditProfileM
                         />
                     </div>
 
-                    {/* Profile Picture */}
                     <div className="relative w-24 h-24 mx-auto mt-[-48px]">
                         <div
                             className="w-full h-full rounded-full overflow-hidden border-4 border-dark-800 cursor-pointer group"
@@ -196,7 +187,6 @@ export default function EditProfileModal({ user, isOpen, onClose }: EditProfileM
                         />
                     </div>
 
-                    {/* Form Fields */}
                     <div className="space-y-4 mt-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -230,7 +220,6 @@ export default function EditProfileModal({ user, isOpen, onClose }: EditProfileM
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex justify-end gap-3 mt-6">
                         <button
                             type="button"
