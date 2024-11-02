@@ -16,7 +16,7 @@ const RootLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <html lang="en">
       <Analytics />
-      <body className={`${inter.className} bg-dark-900 max-h-screen overflow-scroll text-white-500`}>
+      <body className={`${inter.className} bg-dark-900 max-h-screen overflow-hidden text-white-500`}>
         <StoreProvider>
           {children}
         </StoreProvider>
