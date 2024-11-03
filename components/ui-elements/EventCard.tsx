@@ -6,6 +6,7 @@ import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/firebase'
 import { useRouter } from 'next/navigation'
 import { setUser } from '@/redux/userSlice'
+import { openSignupModal } from '@/redux/modalSlice'
 
 interface EventCardProps {
     event: Event
@@ -30,6 +31,10 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         : 'Unknown Date';
 
     async function handleRegister() {
+        if (!user.userUID) {
+            dispatch(openSignupModal())
+            return
+        }
         try {
             await Promise.all([
                 updateDoc(doc(db, 'users', String(user.userUID)), {
@@ -72,8 +77,6 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             console.error("Error unregistering for meetup:", error);
         }
     }
-
-    console.log(event)
 
     return (
         <div className='bg-dark-800 p-3 w-[32%] m-1 rounded'>

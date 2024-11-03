@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { User, Post } from '@/types';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { db, storage } from '@/firebase';
 import {
   collection,
@@ -17,6 +17,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, StorageReference } from 'firebase/storage';
 import { useRouter } from 'next/navigation';
 import { EventInput } from '@/components/ui-elements/EventInput';
+import { openSignupModal } from '@/redux/modalSlice';
 
 const generateSimpleId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -30,6 +31,7 @@ interface PostInputProps {
 
 export default function PostInput({ inputPlaceholder, communityId, onPostCreated }: PostInputProps) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const user: User = useAppSelector((state) => state.user);
   const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -44,9 +46,12 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
     setError(null);
     const file = e.target.files?.[0];
-
     if (file) {
       try {
         const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -70,62 +75,20 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
     }
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    try {
-      const imageFileName = `${generateSimpleId()}-${file.name}`;
-      const imageRef: StorageReference = ref(storage, `posts/${imageFileName}`);
-      const uploadResult = await uploadBytes(imageRef, file);
-      return await getDownloadURL(uploadResult.ref);
-    } catch (err) {
-      console.error('Error uploading image:', err);
-      throw new Error('Failed to upload image');
+  const handleOpenEventModal = () => {
+    if (!user.userUID) {
+      dispatch(openSignupModal());
+      return;
     }
-  };
-
-  const createFirestorePost = async (postData: Partial<Post>) => {
-    try {
-      const cleanedPostData = Object.fromEntries(
-        Object.entries(postData).filter(([_, value]) => value !== undefined)
-      );
-
-      const postsRef = collection(db, 'posts');
-      const docRef: DocumentReference = await addDoc(postsRef, {
-        ...cleanedPostData,
-        postCreatedAt: serverTimestamp()
-      });
-
-      return docRef.id;
-    } catch (err) {
-      console.error('Error creating Firestore document:', err);
-      throw new Error('Failed to save post to database');
-    }
-  };
-
-  const updateUserPosts = async (userId: string, postId: string) => {
-    try {
-      const userRef = doc(db, 'users', userId);
-      await updateDoc(userRef, {
-        userPosts: arrayUnion(postId)
-      });
-    } catch (err) {
-      console.error('Error updating user posts:', err);
-      throw new Error('Failed to update user posts');
-    }
-  };
-
-  const updateCommunityPosts = async (communityId: string, postId: string) => {
-    try {
-      const communityRef = doc(db, 'communities', communityId);
-      await updateDoc(communityRef, {
-        communityPosts: arrayUnion(postId)
-      });
-    } catch (err) {
-      console.error('Error updating community posts:', err);
-      throw new Error('Failed to update community posts');
-    }
+    setIsEventModalOpen(true);
   };
 
   const handleSubmit = async () => {
+    if (!user.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
     setError(null);
     if (!content.trim() && !imageFile) {
       setError('Please add some content or an image to post');
@@ -137,12 +100,7 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
     try {
       validateFirebaseConfig();
 
-      if (!user?.userUID) {
-        throw new Error('User data is not available');
-      }
-
       let imageUrl = '';
-
       if (imageFile) {
         imageUrl = await uploadImage(imageFile);
       }
@@ -196,6 +154,38 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
       setIsSubmitting(false);
     }
   };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const imageFileName = `${generateSimpleId()}-${file.name}`;
+    const imageRef: StorageReference = ref(storage, `posts/${imageFileName}`);
+    const uploadResult = await uploadBytes(imageRef, file);
+    return await getDownloadURL(uploadResult.ref);
+  };
+
+  const createFirestorePost = async (postData: Partial<Post>) => {
+    const postsRef = collection(db, 'posts');
+    const docRef: DocumentReference = await addDoc(postsRef, {
+      ...postData,
+      postCreatedAt: serverTimestamp()
+    });
+
+    return docRef.id;
+  };
+
+  const updateUserPosts = async (userId: string, postId: string) => {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      userPosts: arrayUnion(postId)
+    });
+  };
+
+  const updateCommunityPosts = async (communityId: string, postId: string) => {
+    const communityRef = doc(db, 'communities', communityId);
+    await updateDoc(communityRef, {
+      communityPosts: arrayUnion(postId)
+    });
+  };
+
   return (
     <div className='bg-dark-800 p-2 sm:p-3 rounded-lg w-full'>
       <div className='bg-dark-700 px-2 sm:px-4 py-2 sm:py-3 rounded'>
@@ -228,26 +218,6 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
                 rows={1}
                 style={{ minHeight: '40px', maxHeight: '200px' }}
               />
-            </div>
-            <div className='flex mt-2 sm:mt-0 justify-end sm:justify-start'>
-              <button className='mx-1 hover:opacity-80 transition-opacity'>
-                <Image
-                  src="/assets/svgs/input-gif.svg"
-                  alt="Add GIF"
-                  width={24}
-                  height={24}
-                  className='sm:w-7 sm:h-7'
-                />
-              </button>
-              <button className='mx-1 hover:opacity-80 transition-opacity'>
-                <Image
-                  src="/assets/svgs/input-emoji.svg"
-                  alt="Add emoji"
-                  width={24}
-                  height={24}
-                  className='sm:w-7 sm:h-7'
-                />
-              </button>
             </div>
           </div>
 
@@ -291,7 +261,7 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
             {!communityId && (
               <div
                 className='flex items-center cursor-pointer hover:opacity-80 transition-opacity'
-                onClick={() => setIsEventModalOpen(true)}
+                onClick={handleOpenEventModal}
               >
                 <Image
                   src="/assets/svgs/input-events.svg"
@@ -300,29 +270,29 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
                   height={18}
                   className='mr-2'
                 />
-                <p className='text-sm'>Events</p>
+                <p className='text-sm'>Event</p>
               </div>
             )}
           </div>
 
-          <button
-            className={`w-full sm:w-auto py-2 px-6 rounded-lg transition-colors ${isSubmitting
-              ? 'bg-brand-300 cursor-not-allowed'
-              : 'bg-brand-500 hover:bg-brand-600'
-              }`}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Posting...' : 'Post'}
-          </button>
+          <div className='w-full sm:w-auto'>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className='w-full px-3 py-2 rounded bg-primary text-white text-sm sm:text-base disabled:bg-gray-500 transition-colors'
+            >
+              {isSubmitting ? 'Posting...' : 'Post'}
+            </button>
+          </div>
         </div>
       </div>
+      {
 
+      }
       <EventInput
         isOpen={isEventModalOpen}
         onClose={() => setIsEventModalOpen(false)}
         userId={user?.userUID || ''}
-      />
-    </div>
+      />    </div>
   );
 }

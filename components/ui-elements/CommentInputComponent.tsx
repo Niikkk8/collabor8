@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Comment, CommentReference, User } from '@/types';
 import Moment from 'react-moment';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { arrayUnion, doc, updateDoc, collection, setDoc, getDoc, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/firebase';
 import Link from 'next/link';
+import { openSignupModal } from '@/redux/modalSlice';
 
 interface CommentInputProps {
   postId: string;
@@ -21,9 +22,14 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const currentUser: User = useAppSelector(state => state.user);
+  const dispatch = useAppDispatch();
+  const currentUser: User | null = useAppSelector(state => state.user);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
@@ -38,13 +44,26 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
     }
   };
 
+  const handleFocus = () => {
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+    setIsFocused(true);
+  };
+
   const handleSubmit = async () => {
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
     if (!content.trim() && !imageFile) return;
     setIsLoading(true);
 
     try {
       let imageUrl = '';
-      let parentCommentId = null
+      let parentCommentId = null;
 
       if (imageFile) {
         const imageRef = ref(storage, `comments/${Date.now()}_${imageFile.name}`);
@@ -56,7 +75,7 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
       const now = new Date();
 
       if (parentComment) {
-        parentCommentId = parentComment.commentUID
+        parentCommentId = parentComment.commentUID;
       }
 
       const newComment: Comment = {
@@ -67,8 +86,8 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
         commentAuthorId: currentUser.userUID,
         commentAuthorName: `${currentUser.userFirstName} ${currentUser.userLastName}`,
         commentLikes: [],
-        commentThreads: [], // Initialize empty array
-        threadRefs: [], // Initialize empty array
+        commentThreads: [],
+        threadRefs: [],
         postId,
         parentCommentId: parentCommentId!
       };
@@ -107,20 +126,20 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
       <div className="flex items-start gap-2 md:gap-3">
         <div className="hidden sm:block">
           <Image
-            src={currentUser.userProfilePictureSrc}
+            src={currentUser?.userProfilePictureSrc || '/assets/images/default-avatar.png'}
             width={40}
             height={40}
-            alt={currentUser.userFirstName}
+            alt={currentUser?.userFirstName || 'User'}
             className="rounded-full w-8 h-8 md:w-10 md:h-10"
           />
         </div>
-        <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent flex item from overflowing */}
+        <div className="flex-1 min-w-0">
           <textarea
-            placeholder="Write a comment..."
+            placeholder={currentUser?.userUID ? "Write a comment..." : "Sign in to comment..."}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full bg-dark-700 rounded-lg p-2 md:p-3 min-h-[40px] md:min-h-[60px] text-sm resize-none"
-            onFocus={() => setIsFocused(true)}
+            onFocus={handleFocus}
           />
 
           {imagePreview && (
@@ -139,7 +158,7 @@ function CommentInput({ postId, parentComment, onCommentPost }: CommentInputProp
             </div>
           )}
 
-          {isFocused && (
+          {isFocused && currentUser?.userUID && (
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 md:mt-3 gap-2">
               <input
                 type="file"
@@ -188,8 +207,9 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
   const [showThreads, setShowThreads] = useState(true);
   const [replies, setReplies] = useState<Comment[]>([]);
   const [author, setAuthor] = useState<User>();
-  const currentUser: User = useAppSelector(state => state.user);
-  const hasLiked = comment.commentLikes.includes(currentUser.userUID);
+  const dispatch = useAppDispatch();
+  const currentUser: User | null = useAppSelector(state => state.user);
+  const hasLiked = currentUser?.userUID ? comment.commentLikes.includes(currentUser.userUID) : false;
 
   useEffect(() => {
     if (!comment.threadRefs?.length) return;
@@ -211,7 +231,6 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
         setReplies(replyDocs as Comment[]);
       }
     );
-
 
     return () => unsubscribe();
   }, [comment.commentUID, comment.threadRefs]);
@@ -237,6 +256,11 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
   }, [comment.commentAuthorId]);
 
   const handleLike = async () => {
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
     try {
       const commentRef = doc(db, 'comments', comment.commentUID);
       await updateDoc(commentRef, {
@@ -248,6 +272,14 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
     } catch (error) {
       console.error("Error updating like:", error);
     }
+  };
+
+  const handleReplyClick = () => {
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+    setIsReplying(!isReplying);
   };
 
   return (
@@ -310,7 +342,7 @@ function CommentDisplay({ comment, onUpdate }: { comment: Comment; onUpdate?: ()
             </button>
 
             <button
-              onClick={() => setIsReplying(!isReplying)}
+              onClick={handleReplyClick}
               className="flex items-center gap-1 hover:text-brand-500"
             >
               <Image

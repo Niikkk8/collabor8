@@ -8,6 +8,7 @@ import { User } from '@/types';
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import EditProfileModal from './EditProfileModal';
+import { openSignupModal } from '@/redux/modalSlice';
 
 export default function ProfileActionButton({ id }: { id: string }) {
   const dispatch = useAppDispatch();
@@ -18,6 +19,10 @@ export default function ProfileActionButton({ id }: { id: string }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   async function handleFollow() {
+    if (!user.userUID) {
+      dispatch(openSignupModal())
+      return
+    }
     try {
       await Promise.all([
         updateDoc(doc(db, 'users', String(user.userUID)), {

@@ -2,6 +2,7 @@
 
 import { db } from '@/firebase';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { openSignupModal } from '@/redux/modalSlice';
 import { setUser } from '@/redux/userSlice';
 import { User } from '@/types'
 import { arrayRemove, arrayUnion, deleteDoc, doc, updateDoc } from 'firebase/firestore';
@@ -17,6 +18,11 @@ export default function CommunityActionButton({ communityId, communityAdmin }: {
     const isAdmin: boolean = user.userUID === communityAdmin;
 
     async function handleJoin() {
+        if (!user.userUID) {
+            dispatch(openSignupModal())
+            return
+        }
+
         try {
             await Promise.all([
                 updateDoc(doc(db, 'users', String(user.userUID)), {

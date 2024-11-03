@@ -20,6 +20,8 @@ export default function SearchBar() {
   const [error, setError] = useState<string | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
+  const isAuthenticated: boolean = user.userUID ? true : false;
+
   const searchRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -279,7 +281,7 @@ export default function SearchBar() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

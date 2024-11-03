@@ -3,6 +3,7 @@
 import CommunitiesCard from '@/components/communities/CommunitiesCard';
 import { db, storage } from '@/firebase';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { openSignupModal } from '@/redux/modalSlice';
 import { setUser } from '@/redux/userSlice';
 import { Community, User } from '@/types';
 import { addDoc, arrayUnion, collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
@@ -17,6 +18,7 @@ const generateSimpleId = () => {
 export default function CommunitiesPage() {
   const dispatch = useAppDispatch()
   const user: User = useAppSelector((state) => state.user)
+  const isAuthenticated = user?.userUID;
 
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
   const [notJoinedCommunities, setNotJoinedCommunities] = useState<Community[]>([]);
@@ -117,8 +119,13 @@ export default function CommunitiesPage() {
     fetchNotJoinedCommunities();
   }, [user.userCommunities, user.userUID]);
 
-  console.log(joinedCommunities)
-
+  const handleCreateCommunityClick = () => {
+    if (!isAuthenticated) {
+      dispatch(openSignupModal());
+    } else {
+      setIsModalOpen(true);
+    }
+  };
   const visibleCommunities = displayAllCommunities
     ? joinedCommunities
     : joinedCommunities.slice(0, 3);
@@ -243,21 +250,33 @@ export default function CommunitiesPage() {
       <div className="flex items-center py-2 my-4 min-w-fit">
         <p className="text-sm text-white-800">Want to create your own community?</p>
         <div className="flex-grow ml-2 h-[1px] bg-dark-700" />
-        <button className='bg-brand-500 px-6 py-2 rounded mx-2 min-w-fit' onClick={() => setIsModalOpen(true)}>
+        <button
+          className='bg-brand-500 px-6 py-2 rounded mx-2 min-w-fit'
+          onClick={handleCreateCommunityClick}
+        >
           Create Community
         </button>
       </div>
 
       <div className='border-b border-dark-700 pb-6'>
-        <h2 className='text-lg font-medium'>Communities you&apos;ve joined</h2>
-        <p className='text-xs text-white-800 mb-2'>View all the communities you&apos;ve joined</p>
+        <h2 className='text-lg font-medium'>
+          {isAuthenticated ? "Communities you've joined" : "Join communities"}
+        </h2>
+        <p className='text-xs text-white-800 mb-2'>
+          {isAuthenticated
+            ? "View all the communities you've joined"
+            : "Sign in to join and create communities"
+          }
+        </p>
 
         {loading ? (
           <p className="text-gray-400">Loading...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : joinedCommunities.length === 0 ? (
-          <p className="text-white-6  00 bg-dark-700 w-fit py-2 px-6 rounded mt-6">You have not joined any communities yet.</p>
+        ) : isAuthenticated && joinedCommunities.length === 0 ? (
+          <p className="text-white-600 bg-dark-700 w-fit py-2 px-6 rounded mt-6">
+            You have not joined any communities yet.
+          </p>
         ) : (
           <div className='flex flex-wrap'>
             {visibleCommunities.map((community) => (
@@ -268,7 +287,7 @@ export default function CommunitiesPage() {
           </div>
         )}
 
-        {joinedCommunities.length > 3 && (
+        {isAuthenticated && joinedCommunities.length > 3 && (
           <div className='text-center'>
             {!displayAllCommunities && (
               <button
@@ -304,7 +323,7 @@ export default function CommunitiesPage() {
         )}
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && isAuthenticated && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative w-full max-w-xl bg-dark-800 rounded-lg shadow-xl">
             <button

@@ -7,15 +7,17 @@ import Moment from 'react-moment';
 import getCommunitiesData from '../helpers/fetchCommunityData';
 import { arrayRemove, arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
+import { openSignupModal } from '@/redux/modalSlice';
 
 export default function Post({ post }: { post: PostType }) {
   const [user, setUser] = useState<User | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
   const [postComponent, setPost] = useState<PostType>(post);
   const [isHovered, setIsHovered] = useState<string | null>(null);
-  const currentUser: User = useAppSelector((state) => state.user);
-  const hasLiked: boolean = postComponent.postLikes.includes(currentUser.userUID);
+  const dispatch = useAppDispatch();
+  const currentUser: User | null = useAppSelector((state) => state.user);
+  const hasLiked: boolean = currentUser?.userUID ? postComponent.postLikes.includes(currentUser.userUID) : false;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,7 +40,12 @@ export default function Post({ post }: { post: PostType }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!postComponent || !currentUser) return;
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
+    if (!postComponent) return;
 
     try {
       await updateDoc(doc(db, 'posts', String(postComponent.postUID)), {
@@ -57,7 +64,12 @@ export default function Post({ post }: { post: PostType }) {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!postComponent || !currentUser) return;
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
+    if (!postComponent) return;
 
     try {
       await updateDoc(doc(db, 'posts', String(postComponent.postUID)), {
@@ -71,9 +83,22 @@ export default function Post({ post }: { post: PostType }) {
         } : prevPost
       );
     } catch (error) {
-      console.error("Error Liking Post:", error);
+      console.error("Error Removing Like:", error);
     }
   }
+
+  const handleInteraction = (e: React.MouseEvent, action: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentUser?.userUID) {
+      dispatch(openSignupModal());
+      return;
+    }
+
+    // Handle other interactions when implemented
+    console.log(`${action} clicked`);
+  };
 
   const ActionButton = ({
     icon,
@@ -92,7 +117,7 @@ export default function Post({ post }: { post: PostType }) {
   }) => (
     <button
       className="mr-2 sm:mr-6 flex items-center space-x-1 group relative"
-      onClick={onClick}
+      onClick={onClick || ((e) => handleInteraction(e, label))}
       onMouseEnter={() => setIsHovered(label)}
       onMouseLeave={() => setIsHovered(null)}
     >
@@ -115,7 +140,7 @@ export default function Post({ post }: { post: PostType }) {
       )}
       {isHovered === label && (
         <div className="hidden sm:block absolute -top-8 left-1/2 transform -translate-x-1/2 bg-dark-700 text-white text-xs py-1 px-2 rounded whitespace-nowrap">
-          {label}
+          {currentUser?.userUID ? label : `Sign in to ${label.toLowerCase()}`}
         </div>
       )}
     </button>
@@ -168,15 +193,20 @@ export default function Post({ post }: { post: PostType }) {
             </div>
           </div>
         </div>
-        <button className="p-1 sm:p-2 rounded-full transition-colors duration-200 hover:bg-dark-700 ml-2 flex-shrink-0">
-          <Image
-            src="/assets/svgs/post-verticalellipsis.svg"
-            alt="Post options"
-            width={10}
-            height={10}
-            className="sm:w-3 sm:h-3"
-          />
-        </button>
+        {currentUser?.userUID && (
+          <button
+            className="p-1 sm:p-2 rounded-full transition-colors duration-200 hover:bg-dark-700 ml-2 flex-shrink-0"
+            onClick={(e) => handleInteraction(e, 'Options')}
+          >
+            <Image
+              src="/assets/svgs/post-verticalellipsis.svg"
+              alt="Post options"
+              width={10}
+              height={10}
+              className="sm:w-3 sm:h-3"
+            />
+          </button>
+        )}
       </div>
       <p className="text-xs sm:text-sm mt-2">
         {postComponent.postContent}

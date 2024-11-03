@@ -34,7 +34,7 @@ const AppContent = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     if (!isMounted) return null;
-    
+
     if (loading) {
         return (
             <div className="flex h-[100svh] items-center justify-center bg-dark-900">
@@ -56,9 +56,7 @@ const AppContent = ({ children }: { children: React.ReactNode }) => {
             <SignupModal />
             <LoginModal />
             {!currentUser && (
-                <div className="fixed inset-0 bg-dark-900/95 z-50">
-                    <LoginOptionInterface />
-                </div>
+                <LoginOptionInterface />
             )}
         </div>
     );
