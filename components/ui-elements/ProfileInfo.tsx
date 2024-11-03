@@ -9,7 +9,7 @@ export default function ProfileInfo({ user }: { user: User }) {
 
     return (
         <div className='bg-dark-800 p-4 mt-2 rounded-lg'>
-            {user.userUID ?
+            {user?.userID ? (
                 <>
                     <div className='flex items-center'>
                         <Image
@@ -43,12 +43,17 @@ export default function ProfileInfo({ user }: { user: User }) {
                         </div>
                     </div>
                 </>
-                :
+            ) : (
                 <div className='flex flex-col'>
                     <p className='text-sm text-white-800 w-full'>User not signed in, no data to display</p>
-                    <button className='bg-brand-500 px-4 py-1 mt-2 rounded' onClick={() => dispatch(openSignupModal())}>Sign up</button>
+                    <button
+                        className='bg-brand-500 px-4 py-1 mt-2 rounded'
+                        onClick={() => dispatch(openSignupModal())}
+                    >
+                        Sign up
+                    </button>
                 </div>
-            }
+            )}
         </div>
-    )
+    );
 }

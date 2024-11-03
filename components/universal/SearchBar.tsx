@@ -275,7 +275,7 @@ export default function SearchBar() {
               </div>
 
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-dark-900 shadow-lg py-1 z-10">
+                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-dark-900 shadow-lg py-1 z-[1000]">
                   <div className="px-4 py-2 text-sm text-red-500 hover:bg-dark-800 cursor-pointer flex items-center" onClick={handleSignOut}>
                     Sign Out
                   </div>
