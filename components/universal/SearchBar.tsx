@@ -8,11 +8,11 @@ import { User, Community } from "@/types";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { signOut } from "firebase/auth";
 import { signOutUser } from "@/redux/userSlice";
-import { AppDispatch } from "@/redux/store";
+import { openSignupModal } from "@/redux/modalSlice";
 
 export default function SearchBar() {
   const user: User = useAppSelector((state) => state.user);
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [userResults, setUserResults] = useState<User[]>([]);
   const [communityResults, setCommunityResults] = useState<Community[]>([]);
@@ -232,56 +232,66 @@ export default function SearchBar() {
         )}
       </div>
       <div className='flex items-center min-w-fit'>
-        <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
-          <Image
-            src='/assets/svgs/searchbar-messages.svg'
-            alt="Messages Icon"
-            width={22}
-            height={22}
-            className='w-[22px] h-[22px]'
-          />
-        </div>
-        <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
-          <Image
-            src='/assets/svgs/searchbar-saved.svg'
-            alt="Saved Icon"
-            width={22}
-            height={22}
-            className='w-[22px] h-[22px]'
-          />
-        </div>
-        <div ref={profileDropdownRef} className="relative">
-          <div
-            className='flex items-center ml-4 cursor-pointer'
-            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-          >
-            <Image
-              src={user.userProfilePictureSrc || '/assets/placeholder-images/profile-picture.jpg'}
-              alt="User Profile Picture"
-              width={48}
-              height={48}
-              className='object-cover rounded-full aspect-square mr-2 md:m-0'
-            />
-            <h3 className='hidden md:block text-sm ml-2 mr-1 text-white'>{user.userFirstName} {user.userLastName}</h3>
-            <Image
-              src='/assets/svgs/searchbar-dropdown.svg'
-              alt="Dropdown Icon"
-              width={18}
-              height={18}
-              className={`w-[18px] h-[18px] transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''
-                }`}
-            />
-          </div>
-
-          {isProfileDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 rounded-lg bg-dark-900 shadow-lg py-1 z-10">
-              <div className="px-4 py-2 text-sm text-red-500 hover:bg-dark-800 cursor-pointer flex items-center" onClick={handleSignOut}>
-                Sign Out
-              </div>
+        {isAuthenticated ? (
+          <>
+            <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
+              <Image
+                src='/assets/svgs/searchbar-messages.svg'
+                alt="Messages Icon"
+                width={22}
+                height={22}
+                className='w-[22px] h-[22px]'
+              />
             </div>
-          )}
-        </div>
-      </div >
-    </div >
+            <div className='p-3 rounded-lg mx-2 bg-dark-800 hidden md:block'>
+              <Image
+                src='/assets/svgs/searchbar-saved.svg'
+                alt="Saved Icon"
+                width={22}
+                height={22}
+                className='w-[22px] h-[22px]'
+              />
+            </div>
+            <div ref={profileDropdownRef} className="relative">
+              <div
+                className='flex items-center ml-4 cursor-pointer'
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              >
+                <Image
+                  src={user.userProfilePictureSrc || '/assets/placeholder-images/profile-picture.jpg'}
+                  alt="User Profile Picture"
+                  width={48}
+                  height={48}
+                  className='object-cover rounded-full aspect-square mr-2 md:m-0'
+                />
+                <h3 className='hidden md:block text-sm ml-2 mr-1 text-white'>{user.userFirstName} {user.userLastName}</h3>
+                <Image
+                  src='/assets/svgs/searchbar-dropdown.svg'
+                  alt="Dropdown Icon"
+                  width={18}
+                  height={18}
+                  className={`w-[18px] h-[18px] transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </div>
+
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-dark-900 shadow-lg py-1 z-10">
+                  <div className="px-4 py-2 text-sm text-red-500 hover:bg-dark-800 cursor-pointer flex items-center" onClick={handleSignOut}>
+                    Sign Out
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <button
+            onClick={() => dispatch(openSignupModal())}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+          >
+            Sign In
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
