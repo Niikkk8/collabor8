@@ -106,27 +106,13 @@ export default function Page({ params }: { params: { id: string } }) {
 
     const handlePostCreated = (newPost: PostType) => {
         setPosts(prevPosts => [newPost, ...prevPosts]);
-      };
+    };
 
     return (
-        <div className="relative min-h-screen">
-            {/* Mobile Toggle Button */}
-            <button
-                className="fixed bottom-20 right-4 z-50 lg:hidden bg-dark-800 p-3 rounded-full shadow-lg"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-                <Image
-                    src="/assets/svgs/menu.svg"
-                    width={24}
-                    height={24}
-                    alt="Toggle sidebar"
-                />
-            </button>
-
-            <div className="flex flex-col lg:flex-row h-full">
-                {/* Main Content */}
+        <div className="h-screen flex flex-col">
+            <div className="flex-1 flex flex-col lg:flex-row relative">
                 <div className="w-full lg:w-3/4 p-4 lg:border-r border-dark-700 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto">
+                    <div className="">
                         {/* Mobile Community Info Preview */}
                         <div className="lg:hidden mb-6">
                             <h1 className="text-xl font-bold">{community.communityName}</h1>
@@ -185,6 +171,18 @@ export default function Page({ params }: { params: { id: string } }) {
                     />
                 )}
             </div>
+
+            <button
+                className="fixed bottom-20 right-4 z-50 lg:hidden bg-dark-800 p-3 rounded-full shadow-lg"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                <Image
+                    src="/assets/svgs/menu.svg"
+                    width={24}
+                    height={24}
+                    alt="Toggle sidebar"
+                />
+            </button>
         </div>
     );
 }
