@@ -122,6 +122,7 @@ export default function Page({ params }: { params: { id: string } }) {
                         <PostInput
                             inputPlaceholder={"What's on your mind?"}
                             onPostCreated={handlePostCreated}
+                            communityId={community.communityUID}
                         />
 
                         <div className="flex items-center p-2 mt-4 min-w-fit">

@@ -279,7 +279,7 @@ export default function PostInput({ inputPlaceholder, communityId, onPostCreated
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className='w-full px-3 py-2 rounded bg-primary text-white text-sm sm:text-base disabled:bg-gray-500 transition-colors'
+              className='w-full px-3 py-2 rounded bg-primary text-white text-sm sm:text-base disabled:bg-brand-300 bg-brand-500 transition-colors'
             >
               {isSubmitting ? 'Posting...' : 'Post'}
             </button>
