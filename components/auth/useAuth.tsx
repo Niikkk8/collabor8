@@ -31,7 +31,7 @@ export function useAuth() {
                             userProfilePictureSrc: userData.userProfilePictureSrc,
                             userProfileBannerSrc: userData.userProfileBannerSrc,
                             userBio: userData.userBio,
-                            userJoiningDate: userData.userJoiningDate.toDate(),
+                            userJoiningDate: userData.userJoiningDate.toLocaleString(),
                             userFollowers: userData.userFollowers,
                             userFollowing: userData.userFollowing,
                             userPosts: userData.userPosts,

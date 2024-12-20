@@ -16,8 +16,8 @@ const generateSimpleId = () => {
 };
 
 export default function CommunitiesPage() {
-  const dispatch = useAppDispatch()
-  const user: User = useAppSelector((state) => state.user)
+  const dispatch = useAppDispatch();
+  const user: User = useAppSelector((state) => state.user);
   const isAuthenticated = user?.userUID;
 
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
@@ -43,81 +43,36 @@ export default function CommunitiesPage() {
 
   useEffect(() => {
     const fetchCommunities = async () => {
-      if (!user.userCommunities || user.userCommunities.length === 0) {
-        setJoinedCommunities([]);
-        return;
-      }
+      if (!isAuthenticated) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const communitiesData: Community[] = [];
-
-        for (const communityID of user.userCommunities) {
-          const communityRef = doc(db, 'communities', communityID);
-          const communitySnap = await getDoc(communityRef);
-
-          if (communitySnap.exists()) {
-            communitiesData.push({
-              ...communitySnap.data(),
-              communityUID: communityID,
-            } as Community);
-          }
-        }
-
-        setJoinedCommunities(communitiesData);
-      } catch (error) {
-        console.error('Error fetching joined communities:', error);
-        setError('An error occurred while fetching communities');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchNotJoinedCommunities = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        let q;
-        if (!user.userCommunities || user.userCommunities.length === 0) {
-          q = query(collection(db, 'communities'));
-        } else {
-          q = query(
-            collection(db, 'communities'),
-            where('communityMembers', 'not-in', [user.userUID])
-          );
-        }
-
-        const querySnapshot = await getDocs(q);
-        const communitiesData: Community[] = [];
-
-        querySnapshot.forEach((doc) => {
-          if (!user.userCommunities?.includes(doc.id)) {
-            communitiesData.push({
-              ...doc.data(),
-              communityUID: doc.id,
-            } as Community);
-          }
+        const params = new URLSearchParams({
+          userUID: user.userUID,
+          userCommunities: JSON.stringify(user.userCommunities || [])
         });
 
-        const sortedCommunities = communitiesData.sort((a, b) =>
-          (b.communityMembers?.length || 0) - (a.communityMembers?.length || 0)
-        );
+        const response = await fetch(`/api/communities?${params}`);
+        const data = await response.json();
 
-        setNotJoinedCommunities(sortedCommunities);
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch communities');
+        }
+
+        setJoinedCommunities(data.joinedCommunities);
+        setNotJoinedCommunities(data.notJoinedCommunities);
       } catch (error) {
-        console.error('Error fetching not joined communities:', error);
-        setError('An error occurred while fetching communities');
+        console.error('Error fetching communities:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch communities');
       } finally {
         setLoading(false);
       }
     };
 
     fetchCommunities();
-    fetchNotJoinedCommunities();
-  }, [user.userCommunities, user.userUID]);
+  }, [user.userUID, user.userCommunities, isAuthenticated]);
 
   const handleCreateCommunityClick = () => {
     if (!isAuthenticated) {

@@ -5,8 +5,6 @@ import Image from 'next/image';
 import Post from '@/components/ui-elements/Post';
 import PostInput from '@/components/ui-elements/PostInput';
 import Link from 'next/link';
-import { db } from '@/firebase';
-import { collection, query, where, orderBy, getDocs, limit as firestoreLimit, DocumentData, CollectionReference } from 'firebase/firestore';
 import { useAppSelector } from '@/redux/hooks';
 import { Post as PostType, User } from '@/types';
 
@@ -48,136 +46,30 @@ export default function Home() {
   ];
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
-        const response = await fetch(
-          `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&country=in&language=en&category=technology`
-        );
-        const data = await response.json();
-
-        const filteredArticles = Array.isArray(data.results)
-          ? data.results
-            .filter((article: any) => article.image_url && article.source_icon)
-            .slice(0, 2)
-          : [];
-
-        setNewsArticles(filteredArticles);
-      } catch (error) {
-        console.error('Error fetching news:', error);
-      }
-    };
-
-    fetchNews();
-  }, []);
-
-  function chunk<T>(array: T[], size: number): T[][] {
-    const chunked: T[][] = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunked.push(array.slice(i, i + size));
-    }
-    return chunked;
-  }
-
-  useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
         if (!currentUser?.userUID) {
           console.error('No user found');
           return;
         }
 
-        const postsRef: CollectionReference<DocumentData> = collection(db, 'posts');
-        const POSTS_PER_QUERY = 20;
-        let allPosts: PostType[] = [];
-
-        if (currentUser.userFollowing?.length > 0) {
-          const followingChunks = chunk(currentUser.userFollowing, 10);
-          for (const followingChunk of followingChunks) {
-            const q = query(
-              postsRef,
-              where('postAuthorId', 'in', followingChunk),
-              orderBy('postCreatedAt', 'desc'),
-              firestoreLimit(POSTS_PER_QUERY)
-            );
-            const chunkSnapshot = await getDocs(q);
-            chunkSnapshot.forEach((doc) => {
-              const postData = doc.data();
-              allPosts.push({
-                postUID: doc.id,
-                postContent: postData.postContent,
-                postImageSrc: postData.postImageSrc,
-                postCreatedAt: postData.postCreatedAt.toDate(),
-                postAuthorId: postData.postAuthorId,
-                postAuthorName: postData.postAuthorName,
-                postCommunityId: postData.postCommunityId,
-                postLikes: postData.postLikes || [],
-                postComments: postData.postComments || [],
-              });
-            });
-          }
-        }
-
-        if (currentUser.userCommunities?.length > 0) {
-          const communityChunks = chunk(currentUser.userCommunities, 10);
-          for (const communityChunk of communityChunks) {
-            const q = query(
-              postsRef,
-              where('postCommunityId', 'in', communityChunk),
-              orderBy('postCreatedAt', 'desc'),
-              firestoreLimit(POSTS_PER_QUERY)
-            );
-            const chunkSnapshot = await getDocs(q);
-            chunkSnapshot.forEach((doc) => {
-              const postData = doc.data();
-              allPosts.push({
-                postUID: doc.id,
-                postContent: postData.postContent,
-                postImageSrc: postData.postImageSrc,
-                postCreatedAt: postData.postCreatedAt.toDate(),
-                postAuthorId: postData.postAuthorId,
-                postAuthorName: postData.postAuthorName,
-                postCommunityId: postData.postCommunityId,
-                postLikes: postData.postLikes || [],
-                postComments: postData.postComments || [],
-              });
-            });
-          }
-        }
-
-        const ownPostsQuery = query(
-          postsRef,
-          where('postAuthorId', '==', currentUser.userUID),
-          orderBy('postCreatedAt', 'desc'),
-          firestoreLimit(POSTS_PER_QUERY)
-        );
-
-        const ownPostsSnapshot = await getDocs(ownPostsQuery);
-        ownPostsSnapshot.forEach((doc) => {
-          const postData = doc.data();
-          allPosts.push({
-            postUID: doc.id,
-            postContent: postData.postContent,
-            postImageSrc: postData.postImageSrc,
-            postCreatedAt: postData.postCreatedAt.toDate(),
-            postAuthorId: postData.postAuthorId,
-            postAuthorName: postData.postAuthorName,
-            postCommunityId: postData.postCommunityId,
-            postLikes: postData.postLikes || [],
-            postComments: postData.postComments || [],
-          });
+        const params = new URLSearchParams({
+          userUID: currentUser.userUID,
+          userFollowing: JSON.stringify(currentUser.userFollowing || []),
+          userCommunities: JSON.stringify(currentUser.userCommunities || [])
         });
 
-        const uniquePosts = Array.from(
-          new Map(allPosts.map(post => [post.postUID, post])).values()
-        );
-        const sortedPosts = uniquePosts.sort(
-          (a, b) => b.postCreatedAt.getTime() - a.postCreatedAt.getTime()
-        );
+        const response = await fetch(`/api/home?${params}`);
+        const data = await response.json();
 
-        setPosts(sortedPosts);
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch data');
+        }
+
+        setPosts(data.posts);
+        setNewsArticles(data.newsArticles);
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
@@ -185,11 +77,10 @@ export default function Home() {
 
     setPosts([]);
     setIsLoading(true);
-    fetchPosts();
+    fetchData();
   }, [currentUser]);
 
   const handlePostCreated = (newPost: PostType) => {
-    // Add the new post to the beginning of the posts array
     setPosts(prevPosts => [newPost, ...prevPosts]);
   };
 
@@ -200,7 +91,7 @@ export default function Home() {
           inputPlaceholder={"What's on your mind?"}
           onPostCreated={handlePostCreated}
         />
-                <div className="flex items-center p-2 mt-4 min-w-fit">
+        <div className="flex items-center p-2 mt-4 min-w-fit">
           <span className="text-sm text-white-800">Sort By: </span>
           <p className="flex items-center text-sm ml-2">
             Following
