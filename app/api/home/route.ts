@@ -54,7 +54,7 @@ import { NextResponse } from 'next/server';
 import { query, where, orderBy, limit, getDocs, collection, QuerySnapshot, DocumentData } from 'firebase/firestore';
 import { db } from '@/firebase';
 
-const NEWS_API_KEY = process.env.NEWS_API_KEY;
+const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
 
 function chunk<T>(array: T[], size: number): T[][] {
     return array.reduce((acc: T[][], item: T, i: number) => {
